@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTasks } from '../../src/hooks/useTasks';
 import { useSettings } from '../../src/hooks/useSettings';
 import { useAI } from '../../src/hooks/useAI';
-import { ViewStorage } from '../../src/lib/storage';
+import { ViewStorage, TaskStorage } from '../../src/lib/storage';
 import { Greeting } from './components/Greeting';
 import { SmartInput } from './components/SmartInput';
 import { FocusCards } from './components/FocusCards';
@@ -23,6 +23,7 @@ export default function App() {
 
   useEffect(() => {
     if (hasApiKey && tasks.length > 0) {
+      TaskStorage.purgeCompleted();
       ai.generateBrief(tasks).then((view) => { if (view) setComputedView(view); });
     }
   }, [hasApiKey]);
@@ -118,7 +119,8 @@ export default function App() {
           <NudgeSection tasks={deferredTasks} onComplete={completeTask} onDefer={deferTask} />
 
           {clusters.map((cluster) => {
-            const clusterTasks = cluster.taskIds.map((id) => tasks.find((t) => t.id === id)).filter(Boolean) as typeof tasks;
+            const clusterTasks = cluster.taskIds.map((id) => tasks.find((t) => t.id === id)).filter((t) => t && t.status === 'active') as typeof tasks;
+            if (clusterTasks.length === 0) return null;
             return <ClusterSection key={cluster.id} cluster={cluster} tasks={clusterTasks} onComplete={completeTask} onDefer={deferTask} />;
           })}
 

@@ -34,6 +34,25 @@ export const TaskStorage = {
   clear(): void {
     localStorage.removeItem(TASKS_KEY);
   },
+
+  purgeCompleted(): void {
+    const now = Date.now();
+    const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
+    const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+
+    const tasks = this.getAll();
+    const kept = tasks.filter((t) => {
+      if (t.status !== 'completed' || !t.completedAt) return true;
+      const age = now - new Date(t.completedAt).getTime();
+      const hasRelationships = t.relationships.blocks.length > 0 || t.relationships.blockedBy.length > 0;
+      if (hasRelationships) return age < SEVEN_DAYS;
+      return age < THREE_DAYS;
+    });
+
+    if (kept.length < tasks.length) {
+      localStorage.setItem(TASKS_KEY, JSON.stringify(kept));
+    }
+  },
 };
 
 export const ViewStorage = {
