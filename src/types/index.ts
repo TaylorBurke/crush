@@ -54,7 +54,11 @@ export interface ChatMessage {
   timestamp: string;
 }
 
+export type Provider = 'openai' | 'openrouter';
+
 export interface Settings {
-  openaiApiKey: string;
+  provider: Provider;
+  apiKey: string;
+  model: string;
   userName: string;
 }

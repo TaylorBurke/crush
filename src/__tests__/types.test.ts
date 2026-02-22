@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Task, ComputedView, TaskStatus, Importance } from '../types';
+import type { Task, ComputedView, TaskStatus, Importance, Provider, Settings } from '../types';
 
 describe('types', () => {
   it('should create a valid Task', () => {
@@ -44,5 +44,23 @@ describe('types', () => {
     };
     expect(view.focusToday).toHaveLength(2);
     expect(view.clusters[0].progress).toBe(0.5);
+  });
+
+  it('should accept valid Provider values', () => {
+    const p1: Provider = 'openai';
+    const p2: Provider = 'openrouter';
+    expect(p1).toBe('openai');
+    expect(p2).toBe('openrouter');
+  });
+
+  it('should create Settings with provider and model', () => {
+    const s: Settings = {
+      provider: 'openrouter',
+      apiKey: 'sk-or-test',
+      model: 'anthropic/claude-haiku-4-5',
+      userName: 'Taylor',
+    };
+    expect(s.provider).toBe('openrouter');
+    expect(s.model).toBe('anthropic/claude-haiku-4-5');
   });
 });
