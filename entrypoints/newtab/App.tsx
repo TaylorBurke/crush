@@ -29,7 +29,7 @@ export default function App() {
 
   const focusTasks = useMemo(() => {
     if (computedView?.focusToday.length) {
-      return computedView.focusToday.map((id) => tasks.find((t) => t.id === id)).filter(Boolean) as typeof tasks;
+      return computedView.focusToday.map((id) => tasks.find((t) => t.id === id)).filter((t) => t && t.status === 'active') as typeof tasks;
     }
     return activeTasks.slice(0, 4);
   }, [computedView, tasks, activeTasks]);
@@ -95,43 +95,52 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_center,var(--color-bg-gradient-from),var(--color-bg-gradient-to))]">
-      <div className="mx-auto max-w-2xl px-6 py-12">
-        <div className="flex items-start justify-between">
+    <div className="flex h-screen bg-[radial-gradient(ellipse_at_center,var(--color-bg-gradient-from),var(--color-bg-gradient-to))]">
+      <div className="flex-1 overflow-y-auto transition-all duration-300 ease-in-out">
+        <div className="mx-auto max-w-2xl px-6 py-12">
           <Greeting />
-          {hasApiKey && (
-            <button onClick={() => setChatOpen(true)} className="rounded-lg bg-accent-soft px-4 py-2 text-sm text-accent-text transition-colors hover:bg-accent-hover hover:text-white">
-              ask crush
-            </button>
+
+          <SmartInput
+            onSubmit={handleSubmit}
+            isLoading={ai.isParsing}
+            feedback={feedback}
+            onFeedbackDone={() => setFeedback(null)}
+          />
+
+          {!hasApiKey && tasks.length === 0 && (
+            <div className="rounded-2xl border border-border bg-accent-soft p-6 text-center">
+              <p className="text-sm text-accent-text">add your OpenAI API key in settings to unlock AI-powered task parsing, daily briefs, and smart prioritization.</p>
+              <p className="mt-2 text-xs text-text-muted">click the gear icon in the bottom-right corner.</p>
+            </div>
           )}
+
+          <FocusCards tasks={focusTasks} nudges={nudges} onComplete={completeTask} onDefer={deferTask} />
+          <NudgeSection tasks={deferredTasks} onComplete={completeTask} onDefer={deferTask} />
+
+          {clusters.map((cluster) => {
+            const clusterTasks = cluster.taskIds.map((id) => tasks.find((t) => t.id === id)).filter(Boolean) as typeof tasks;
+            return <ClusterSection key={cluster.id} cluster={cluster} tasks={clusterTasks} onComplete={completeTask} onDefer={deferTask} />;
+          })}
+
+          <SomedayBucket tasks={somedayTasks} onComplete={completeTask} onDefer={deferTask} />
         </div>
-
-        <SmartInput
-          onSubmit={handleSubmit}
-          isLoading={ai.isParsing}
-          feedback={feedback}
-          onFeedbackDone={() => setFeedback(null)}
-        />
-
-        {!hasApiKey && tasks.length === 0 && (
-          <div className="rounded-2xl border border-border bg-accent-soft p-6 text-center">
-            <p className="text-sm text-accent-text">add your OpenAI API key in settings to unlock AI-powered task parsing, daily briefs, and smart prioritization.</p>
-            <p className="mt-2 text-xs text-text-muted">click the gear icon in the bottom-right corner.</p>
-          </div>
-        )}
-
-        <FocusCards tasks={focusTasks} nudges={nudges} onComplete={completeTask} onDefer={deferTask} />
-        <NudgeSection tasks={deferredTasks} onComplete={completeTask} onDefer={deferTask} />
-
-        {clusters.map((cluster) => {
-          const clusterTasks = cluster.taskIds.map((id) => tasks.find((t) => t.id === id)).filter(Boolean) as typeof tasks;
-          return <ClusterSection key={cluster.id} cluster={cluster} tasks={clusterTasks} onComplete={completeTask} onDefer={deferTask} />;
-        })}
-
-        <SomedayBucket tasks={somedayTasks} onComplete={completeTask} onDefer={deferTask} />
-        <AIChatPanel open={chatOpen} onClose={() => setChatOpen(false)} onSend={handleChat} messages={ai.chatHistory} isLoading={ai.isChatting} />
-        <SettingsPanel />
       </div>
+
+      <AIChatPanel open={chatOpen} onClose={() => setChatOpen(false)} onSend={handleChat} messages={ai.chatHistory} isLoading={ai.isChatting} />
+
+      {hasApiKey && !chatOpen && (
+        <button
+          onClick={() => setChatOpen(true)}
+          className="fixed bottom-4 right-4 z-40 rounded-full bg-surface-hover p-2.5 text-text-muted transition-colors hover:bg-surface hover:text-text-secondary"
+          aria-label="ask crush"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zm-4 0H9v2h2V9z" clipRule="evenodd" />
+          </svg>
+        </button>
+      )}
+
+      <SettingsPanel />
     </div>
   );
 }
