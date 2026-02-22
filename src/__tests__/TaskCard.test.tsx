@@ -33,9 +33,15 @@ describe('TaskCard', () => {
     expect(screen.getByText(/blocks: 2/i)).toBeInTheDocument();
   });
 
-  it('shows importance indicator for high importance', () => {
-    render(<TaskCard task={mockTask} onComplete={() => {}} onDefer={() => {}} />);
+  it('shows past-due badge when deadline has passed', () => {
+    const pastDueTask = { ...mockTask, parsed: { ...mockTask.parsed, deadline: '2020-01-01' } };
+    render(<TaskCard task={pastDueTask} onComplete={() => {}} onDefer={() => {}} />);
     expect(screen.getByText('!')).toBeInTheDocument();
+  });
+
+  it('does not show badge when deadline is in the future', () => {
+    render(<TaskCard task={mockTask} onComplete={() => {}} onDefer={() => {}} />);
+    expect(screen.queryByText('!')).not.toBeInTheDocument();
   });
 
   it('calls onComplete when complete button is clicked', async () => {

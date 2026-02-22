@@ -14,8 +14,16 @@ function formatDeadline(iso: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+function isPastDue(deadline: string | null): boolean {
+  if (!deadline) return false;
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  return deadline < todayStr;
+}
+
 export function TaskCard({ task, nudge, onComplete, onDefer, variant = 'card' }: TaskCardProps) {
   const blockCount = task.relationships.blocks.length;
+  const pastDue = isPastDue(task.parsed.deadline);
 
   if (variant === 'row') {
     return (
@@ -42,7 +50,7 @@ export function TaskCard({ task, nudge, onComplete, onDefer, variant = 'card' }:
 
   return (
     <div className="relative flex flex-col justify-between rounded-2xl border border-border bg-surface p-5 shadow-sm transition-shadow hover:shadow-md">
-      {task.importance === 'high' && (
+      {pastDue && (
         <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">
           !
         </span>
