@@ -1,12 +1,12 @@
 import { useState, useCallback } from 'react';
-import { callOpenAI } from '../lib/ai-client';
+import { callLLM } from '../lib/ai-client';
 import { buildParsePrompt, parseAIResponse } from '../lib/task-parser';
 import { buildDailyBriefPrompt, parseBriefResponse } from '../lib/daily-brief';
 import { ViewStorage, BriefStorage } from '../lib/storage';
 import { today, isNewDay } from '../lib/date';
-import type { Task, ComputedView, ChatMessage } from '../types';
+import type { Task, ComputedView, ChatMessage, Provider } from '../types';
 
-export function useAI(apiKey: string) {
+export function useAI(apiKey: string, provider: Provider, model: string) {
   const [parsing, setParsing] = useState(false);
   const [briefing, setBriefing] = useState(false);
   const [chatting, setChatting] = useState(false);
@@ -19,7 +19,7 @@ export function useAI(apiKey: string) {
     setParsing(true);
     try {
       const messages = buildParsePrompt(rawText, existingTasks);
-      const response = await callOpenAI({ apiKey, messages, responseFormat: { type: 'json_object' } });
+      const response = await callLLM({ apiKey, provider, model, messages, responseFormat: { type: 'json_object' } });
       return parseAIResponse(response);
     } catch (error) {
       console.error('AI parse failed, using raw text:', error);
@@ -40,7 +40,7 @@ export function useAI(apiKey: string) {
       const nonCompleted = tasks.filter((t) => t.status !== 'completed');
       if (nonCompleted.length === 0) return null;
       const messages = buildDailyBriefPrompt(tasks, chatContext);
-      const response = await callOpenAI({ apiKey, messages, responseFormat: { type: 'json_object' } });
+      const response = await callLLM({ apiKey, provider, model, messages, responseFormat: { type: 'json_object' } });
       const view = parseBriefResponse(response);
       ViewStorage.save(view);
       BriefStorage.setLastDate(today());
@@ -59,8 +59,10 @@ export function useAI(apiKey: string) {
     setChatHistory((prev) => [...prev, newUserMsg]);
     try {
       const taskSummary = tasks.filter((t) => t.status !== 'completed').map((t) => `- "${t.parsed.title}" (${t.status}, importance: ${t.importance})`).join('\n');
-      const rawResponse = await callOpenAI({
+      const rawResponse = await callLLM({
         apiKey,
+        provider,
+        model,
         messages: [
           {
             role: 'system',

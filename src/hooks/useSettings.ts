@@ -4,9 +4,28 @@ import type { Settings } from '../types';
 const SETTINGS_KEY = 'crush-settings';
 
 const defaultSettings: Settings = {
-  openaiApiKey: '',
+  provider: 'openai',
+  apiKey: '',
+  model: '',
   userName: '',
 };
+
+function migrateSettings(raw: Record<string, unknown>): Settings {
+  if ('openaiApiKey' in raw && !('apiKey' in raw)) {
+    return {
+      provider: 'openai',
+      apiKey: (raw.openaiApiKey as string) || '',
+      model: '',
+      userName: (raw.userName as string) || '',
+    };
+  }
+  return {
+    provider: (raw.provider as Settings['provider']) || 'openai',
+    apiKey: (raw.apiKey as string) || '',
+    model: (raw.model as string) || '',
+    userName: (raw.userName as string) || '',
+  };
+}
 
 function getStorage() {
   if (typeof chrome !== 'undefined' && chrome.storage?.local) {
@@ -14,7 +33,7 @@ function getStorage() {
       async get(): Promise<Settings> {
         return new Promise((resolve) => {
           chrome.storage.local.get(SETTINGS_KEY, (result) => {
-            resolve(result[SETTINGS_KEY] ?? defaultSettings);
+            resolve(result[SETTINGS_KEY] ? migrateSettings(result[SETTINGS_KEY]) : defaultSettings);
           });
         });
       },
@@ -28,7 +47,7 @@ function getStorage() {
   return {
     async get(): Promise<Settings> {
       const raw = localStorage.getItem(SETTINGS_KEY);
-      return raw ? JSON.parse(raw) : defaultSettings;
+      return raw ? migrateSettings(JSON.parse(raw)) : defaultSettings;
     },
     async set(settings: Settings): Promise<void> {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
@@ -54,7 +73,7 @@ export function useSettings() {
     await storage.set(next);
   }, [settings, storage]);
 
-  const hasApiKey = Boolean(settings.openaiApiKey);
+  const hasApiKey = Boolean(settings.apiKey);
 
   return { settings, updateSettings, loaded, hasApiKey };
 }

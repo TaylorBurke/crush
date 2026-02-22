@@ -1,17 +1,48 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSettings } from '../../../src/hooks/useSettings';
+import { fetchModels, PROVIDER_CONFIG } from '../../../src/lib/ai-client';
+import type { Provider } from '../../../src/types';
 
 export function SettingsPanel() {
   const { settings, updateSettings, hasApiKey } = useSettings();
   const [open, setOpen] = useState(false);
   const [keyInput, setKeyInput] = useState('');
+  const [modelInput, setModelInput] = useState('');
+  const [availableModels, setAvailableModels] = useState<string[] | null>(null);
+  const [modelStatus, setModelStatus] = useState<'idle' | 'valid' | 'invalid'>('idle');
+
+  useEffect(() => {
+    if (hasApiKey) {
+      fetchModels(settings.provider, settings.apiKey).then(setAvailableModels);
+    } else {
+      setAvailableModels(null);
+    }
+  }, [settings.provider, settings.apiKey, hasApiKey]);
+
+  useEffect(() => {
+    setModelInput(settings.model);
+  }, [settings.model]);
+
+  useEffect(() => {
+    if (!modelInput || !availableModels) {
+      setModelStatus('idle');
+      return;
+    }
+    setModelStatus(availableModels.includes(modelInput) ? 'valid' : 'invalid');
+  }, [modelInput, availableModels]);
 
   const handleSaveKey = () => {
     if (keyInput.trim()) {
-      updateSettings({ openaiApiKey: keyInput.trim() });
+      updateSettings({ apiKey: keyInput.trim() });
       setKeyInput('');
     }
   };
+
+  const handleModelBlur = () => {
+    updateSettings({ model: modelInput.trim() });
+  };
+
+  const config = PROVIDER_CONFIG[settings.provider];
 
   if (!open) {
     return (
@@ -31,12 +62,25 @@ export function SettingsPanel() {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay" onClick={() => setOpen(false)}>
       <div className="w-full max-w-md rounded-2xl border border-border bg-[var(--color-bg-gradient-from)] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <h2 className="mb-4 text-lg font-medium text-text-primary">settings</h2>
+
         <div className="mb-4">
-          <label className="mb-1 block text-sm text-text-secondary">OpenAI API Key</label>
+          <label className="mb-1 block text-sm text-text-secondary">Provider</label>
+          <select
+            value={settings.provider}
+            onChange={(e) => updateSettings({ provider: e.target.value as Provider, apiKey: '', model: '' })}
+            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-border-focus"
+          >
+            <option value="openai">OpenAI</option>
+            <option value="openrouter">OpenRouter</option>
+          </select>
+        </div>
+
+        <div className="mb-4">
+          <label className="mb-1 block text-sm text-text-secondary">API Key</label>
           {hasApiKey ? (
             <div className="flex items-center gap-2">
               <span className="text-sm text-accent">key saved</span>
-              <button onClick={() => updateSettings({ openaiApiKey: '' })} className="text-xs text-text-muted hover:text-text-secondary">remove</button>
+              <button onClick={() => updateSettings({ apiKey: '' })} className="text-xs text-text-muted hover:text-text-secondary">remove</button>
             </div>
           ) : (
             <div className="flex gap-2">
@@ -45,6 +89,36 @@ export function SettingsPanel() {
             </div>
           )}
         </div>
+
+        <div className="mb-4">
+          <label className="mb-1 block text-sm text-text-secondary">Model (optional)</label>
+          <div className="relative">
+            <input
+              type="text"
+              value={modelInput}
+              onChange={(e) => setModelInput(e.target.value)}
+              onBlur={handleModelBlur}
+              placeholder={config.defaultModel}
+              className="w-full rounded-lg border border-border bg-surface px-3 py-2 pr-8 text-sm text-text-primary placeholder-text-muted outline-none focus:border-border-focus"
+            />
+            {modelStatus === 'valid' && (
+              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-accent" aria-label="model valid">&#10003;</span>
+            )}
+            {modelStatus === 'invalid' && (
+              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-red-500 text-xs" aria-label="model invalid">&#10007;</span>
+            )}
+          </div>
+          {modelStatus === 'invalid' && (
+            <p className="mt-1 text-xs text-red-500">model not found</p>
+          )}
+          {settings.provider === 'openrouter' && (
+            <p className="mt-1 text-xs text-text-muted">
+              browse models at{' '}
+              <a href="https://openrouter.ai/models" target="_blank" rel="noopener noreferrer" className="underline hover:text-text-secondary">openrouter.ai/models</a>
+            </p>
+          )}
+        </div>
+
         <div className="mb-6">
           <label className="mb-1 block text-sm text-text-secondary">Your Name</label>
           <input type="text" value={settings.userName} onChange={(e) => updateSettings({ userName: e.target.value })} placeholder="what should crush call you?" className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder-text-muted outline-none focus:border-border-focus" />

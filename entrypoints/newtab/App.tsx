@@ -16,7 +16,7 @@ import type { ComputedView } from '../../src/types';
 export default function App() {
   const { tasks, activeTasks, deferredTasks, somedayTasks, addTask, completeTask, deferTask } = useTasks();
   const { settings, hasApiKey } = useSettings();
-  const ai = useAI(settings.openaiApiKey);
+  const ai = useAI(settings.apiKey, settings.provider, settings.model);
   const [computedView, setComputedView] = useState<ComputedView | null>(() => ViewStorage.get());
   const [chatOpen, setChatOpen] = useState(false);
   const [feedback, setFeedback] = useState<{ message: string } | null>(null);
@@ -110,7 +110,7 @@ export default function App() {
 
           {!hasApiKey && tasks.length === 0 && (
             <div className="rounded-2xl border border-border bg-accent-soft p-6 text-center">
-              <p className="text-sm text-accent-text">add your OpenAI API key in settings to unlock AI-powered task parsing, daily briefs, and smart prioritization.</p>
+              <p className="text-sm text-accent-text">add your API key in settings to unlock AI-powered task parsing, daily briefs, and smart prioritization.</p>
               <p className="mt-2 text-xs text-text-muted">click the gear icon in the bottom-right corner.</p>
             </div>
           )}
