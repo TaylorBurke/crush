@@ -1,12 +1,12 @@
-# Cream -- AI-Powered Task Intelligence System
+# Crush -- AI-Powered Task Intelligence System
 
 **Date:** 2026-02-21
 **Status:** Approved
-**Codename:** Cream
+**Codename:** Crush
 
 ## Overview
 
-Cream is a Chrome new-tab extension that replaces the default new tab page with a focused, AI-powered task management system. It is designed for a creative, chaotic workflow where tasks are interrelated, half-formed, and need intelligent surfacing rather than rigid categorization.
+Crush is a Chrome new-tab extension that replaces the default new tab page with a focused, AI-powered task management system. It is designed for a creative, chaotic workflow where tasks are interrelated, half-formed, and need intelligent surfacing rather than rigid categorization.
 
 The core philosophy: **the app thinks for you.** AI silently manages priorities, detects relationships, nudges you toward important-but-deferred work, and gets out of the way. A conversational interface is available on demand but is not the primary interaction.
 
@@ -210,7 +210,7 @@ Urgency is never stored -- always computed fresh in ComputedView from:
 
 ### Manifest V3 Structure
 ```
-cream/
+crush/
   manifest.json
   src/
     newtab/              # New tab page (React app)

@@ -1,4 +1,4 @@
-# Cream Implementation Plan
+# Crush Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
@@ -26,7 +26,7 @@
 
 **Step 1: Initialize the WXT project**
 
-Run inside `C:\Users\USER\dev\cream`:
+Run inside `C:\Users\USER\dev\crush`:
 ```bash
 npx wxt@latest init . --template react
 ```
@@ -52,7 +52,7 @@ WXT's React template may scaffold a popup. We need a newtab entrypoint. Create `
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cream</title>
+    <title>crush</title>
   </head>
   <body>
     <div id="root"></div>
@@ -82,7 +82,7 @@ Create `entrypoints/newtab/App.tsx`:
 export default function App() {
   return (
     <div className="min-h-screen bg-stone-50 p-8">
-      <h1 className="text-2xl text-stone-800">cream</h1>
+      <h1 className="text-2xl text-stone-800">crush</h1>
     </div>
   );
 }
@@ -97,7 +97,7 @@ Create `entrypoints/background.ts`:
 
 ```typescript
 export default defineBackground(() => {
-  console.log('cream background loaded');
+  console.log('crush background loaded');
 });
 ```
 
@@ -111,7 +111,7 @@ import { defineConfig } from 'wxt';
 export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: {
-    name: 'Cream',
+    name: 'Crush',
     description: 'AI-powered task intelligence for your new tab',
     permissions: ['storage'],
   },
@@ -120,14 +120,14 @@ export default defineConfig({
 
 **Step 5: Remove popup entrypoint if scaffolded**
 
-If WXT created `entrypoints/popup/` or `entrypoints/popup.html`, delete it. Cream is newtab-only.
+If WXT created `entrypoints/popup/` or `entrypoints/popup.html`, delete it. Crush is newtab-only.
 
 **Step 6: Verify newtab works**
 
 ```bash
 npm run dev
 ```
-Expected: Open a new tab in the dev browser. See "cream" heading on a stone-50 background.
+Expected: Open a new tab in the dev browser. See "crush" heading on a stone-50 background.
 
 **Step 7: Commit**
 
@@ -164,7 +164,7 @@ export default defineConfig({
     plugins: [tailwindcss()],
   }),
   manifest: {
-    name: 'Cream',
+    name: 'Crush',
     description: 'AI-powered task intelligence for your new tab',
     permissions: ['storage'],
   },
@@ -179,7 +179,7 @@ Update `entrypoints/newtab/App.tsx` to use Tailwind classes:
 export default function App() {
   return (
     <div className="min-h-screen bg-stone-50 p-8">
-      <h1 className="text-2xl font-light text-stone-800 tracking-tight">cream</h1>
+      <h1 className="text-2xl font-light text-stone-800 tracking-tight">crush</h1>
       <p className="mt-2 text-stone-500 text-sm">your tasks, your way</p>
     </div>
   );
@@ -189,7 +189,7 @@ export default function App() {
 ```bash
 npm run dev
 ```
-Expected: "cream" heading in light font with stone-800 color, subtitle in stone-500.
+Expected: "crush" heading in light font with stone-800 color, subtitle in stone-500.
 
 **Step 4: Commit**
 
@@ -676,9 +676,9 @@ Create `src/lib/storage.ts`:
 ```typescript
 import type { Task, ComputedView } from '../types';
 
-const TASKS_KEY = 'cream-tasks';
-const VIEW_KEY = 'cream-computed-view';
-const LAST_BRIEF_KEY = 'cream-last-brief-date';
+const TASKS_KEY = 'crush-tasks';
+const VIEW_KEY = 'crush-computed-view';
+const LAST_BRIEF_KEY = 'crush-last-brief-date';
 
 export const TaskStorage = {
   getAll(): Task[] {
@@ -1741,7 +1741,7 @@ Create `src/hooks/useSettings.ts`:
 import { useState, useEffect, useCallback } from 'react';
 import type { Settings } from '../types';
 
-const SETTINGS_KEY = 'cream-settings';
+const SETTINGS_KEY = 'crush-settings';
 
 const defaultSettings: Settings = {
   openaiApiKey: '',
@@ -1878,7 +1878,7 @@ export function SettingsPanel() {
             type="text"
             value={settings.userName}
             onChange={(e) => updateSettings({ userName: e.target.value })}
-            placeholder="what should cream call you?"
+            placeholder="what should crush call you?"
             className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-amber-300"
           />
         </div>
@@ -2564,7 +2564,7 @@ export function useAI(apiKey: string) {
         messages: [
           {
             role: 'system',
-            content: `You are a warm, supportive task advisor named Cream. You help the user manage their tasks, prioritize, break down work, and stay motivated.
+            content: `You are a warm, supportive task advisor named Crush. You help the user manage their tasks, prioritize, break down work, and stay motivated.
 
 Current tasks:
 ${taskSummary}
@@ -2652,7 +2652,7 @@ export function AIChatPanel({ open, onClose, onSend, messages, isLoading }: AICh
   return (
     <div className="fixed top-0 right-0 z-50 flex h-full w-full max-w-md flex-col border-l border-stone-200 bg-white shadow-xl">
       <div className="flex items-center justify-between border-b border-stone-200 px-5 py-4">
-        <h2 className="text-sm font-medium text-stone-700">ask cream</h2>
+        <h2 className="text-sm font-medium text-stone-700">ask crush</h2>
         <button onClick={onClose} className="text-stone-400 hover:text-stone-600">&times;</button>
       </div>
 
@@ -2798,7 +2798,7 @@ export default function App() {
             onClick={() => setChatOpen(true)}
             className="rounded-lg bg-amber-100 px-4 py-2 text-sm text-amber-700 transition-colors hover:bg-amber-200"
           >
-            ask cream
+            ask crush
           </button>
         )}
       </div>
@@ -2869,7 +2869,7 @@ export default function App() {
 ```bash
 npm run dev
 ```
-Expected: Full app with greeting, smart input, sections. Adding an API key in settings enables AI parsing (input shows "thinking..." while AI processes). "ask cream" button opens chat panel.
+Expected: Full app with greeting, smart input, sections. Adding an API key in settings enables AI parsing (input shows "thinking..." while AI processes). "ask crush" button opens chat panel.
 
 **Step 5: Commit**
 
@@ -2893,7 +2893,7 @@ Update `entrypoints/background.ts`:
 
 ```typescript
 export default defineBackground(() => {
-  console.log('cream background service worker loaded');
+  console.log('crush background service worker loaded');
 
   // Future: Background sync with Chrome alarms API
   // When ready, add 'alarms' permission to manifest and uncomment:
@@ -2951,7 +2951,7 @@ export default defineConfig({
     plugins: [tailwindcss()],
   }),
   manifest: {
-    name: 'Cream',
+    name: 'Crush',
     description: 'AI-powered task intelligence for your new tab',
     version: '0.1.0',
     permissions: ['storage'],
@@ -3000,7 +3000,7 @@ Expected: Clean build with no errors. Output in `.output/` directory.
 4. Click "not today" to defer -- task moves to nudge section
 5. Click settings gear, enter API key, save
 6. Type another task -- should see "thinking..." then parsed result
-7. Click "ask cream" -- chat panel opens, send "what should I focus on?"
+7. Click "ask crush" -- chat panel opens, send "what should I focus on?"
 
 **Step 4: Commit any fixes**
 
