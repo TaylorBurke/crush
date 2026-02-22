@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
 @theme {
+  --animate-confirm-check: confirm-check 1.2s ease-out forwards;
+
   /* Semantic color tokens - light theme defaults */
   --color-bg-gradient-from: #faf5eb;
   --color-bg-gradient-to: #f0e6d4;
@@ -54,6 +56,28 @@
     --color-check-border: #5a6440;
     --color-check-hover-border: #a0943a;
     --color-check-hover-bg: rgba(61, 68, 40, 0.3);
+  }
+}
+
+@keyframes confirm-check {
+  0% {
+    opacity: 0;
+    transform: translateY(-50%) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-50%) scale(1.15);
+  }
+  35% {
+    transform: translateY(-50%) scale(1) rotate(0deg);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-50%) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(10px) rotate(60deg);
   }
 }
 
