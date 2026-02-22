@@ -65,7 +65,7 @@ export function TaskCard({ task, nudge, onComplete, onDefer, variant = 'card' }:
         <button
           onClick={() => onComplete(task.id)}
           aria-label="complete"
-          className="rounded-lg bg-surface-hover px-3 py-1.5 text-xs text-text-secondary transition-colors hover:bg-success-soft hover:text-success-text"
+          className="rounded-lg bg-surface-hover px-3 py-1.5 text-xs text-text-secondary transition-colors hover:bg-accent-soft hover:text-accent-text"
         >
           done
         </button>

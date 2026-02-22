@@ -35,7 +35,7 @@ export function SettingsPanel() {
           <label className="mb-1 block text-sm text-text-secondary">OpenAI API Key</label>
           {hasApiKey ? (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-success">key saved</span>
+              <span className="text-sm text-accent">key saved</span>
               <button onClick={() => updateSettings({ openaiApiKey: '' })} className="text-xs text-text-muted hover:text-text-secondary">remove</button>
             </div>
           ) : (

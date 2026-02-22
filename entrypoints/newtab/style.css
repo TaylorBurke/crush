@@ -8,25 +8,26 @@
   --color-bg-gradient-to: #f0e6d4;
   --color-surface: #ffffff;
   --color-surface-hover: #f5efe5;
+  --color-input-bg: #fffefa;
   --color-border: #e5ddd0;
   --color-border-focus: #d4a034;
   --color-text-primary: #3d3529;
   --color-text-secondary: #7a7266;
   --color-text-muted: #a09888;
-  --color-accent: #d4a034;
-  --color-accent-hover: #c49028;
+  --color-accent: #c8920a;
+  --color-accent-hover: #b5830a;
   --color-accent-soft: #f5e6c8;
   --color-accent-text: #8a6a1a;
-  --color-success: #4a9e6e;
-  --color-success-soft: #dcf0e4;
-  --color-success-text: #2d6e48;
+  --color-success: #c8920a;
+  --color-success-soft: #f5e6c8;
+  --color-success-text: #8a6a1a;
   --color-nudge: #c4880a;
   --color-overlay: rgba(0, 0, 0, 0.2);
-  --color-ring: rgba(212, 160, 52, 0.2);
+  --color-ring: rgba(200, 146, 10, 0.2);
   --color-progress-bg: #e5ddd0;
-  --color-progress-fill: #d4a034;
+  --color-progress-fill: #c8920a;
   --color-check-border: #c4bab0;
-  --color-check-hover-border: #d4a034;
+  --color-check-hover-border: #c8920a;
   --color-check-hover-bg: #faf0da;
 }
 
@@ -36,26 +37,27 @@
     --color-bg-gradient-to: #1a1e12;
     --color-surface: rgba(42, 48, 25, 0.6);
     --color-surface-hover: rgba(50, 58, 34, 0.7);
+    --color-input-bg: rgba(60, 66, 38, 0.9);
     --color-border: rgba(61, 68, 40, 0.5);
-    --color-border-focus: #a0943a;
+    --color-border-focus: #d4a020;
     --color-text-primary: #f0ead6;
     --color-text-secondary: #c0b8a0;
     --color-text-muted: #8a846e;
-    --color-accent: #c8b44a;
-    --color-accent-hover: #d8c45a;
-    --color-accent-soft: rgba(61, 68, 40, 0.5);
-    --color-accent-text: #d8c86a;
-    --color-success: #6abe8a;
-    --color-success-soft: rgba(42, 58, 40, 0.5);
-    --color-success-text: #8ad4a0;
-    --color-nudge: #d8b84a;
+    --color-accent: #d4a020;
+    --color-accent-hover: #e0ad2a;
+    --color-accent-soft: rgba(80, 62, 20, 0.5);
+    --color-accent-text: #e8be48;
+    --color-success: #d4a020;
+    --color-success-soft: rgba(80, 62, 20, 0.5);
+    --color-success-text: #e8be48;
+    --color-nudge: #d4a020;
     --color-overlay: rgba(0, 0, 0, 0.5);
-    --color-ring: rgba(160, 148, 58, 0.3);
+    --color-ring: rgba(212, 160, 32, 0.3);
     --color-progress-bg: rgba(61, 68, 40, 0.4);
-    --color-progress-fill: #a09434;
+    --color-progress-fill: #d4a020;
     --color-check-border: #5a6440;
-    --color-check-hover-border: #a0943a;
-    --color-check-hover-bg: rgba(61, 68, 40, 0.3);
+    --color-check-hover-border: #d4a020;
+    --color-check-hover-bg: rgba(80, 62, 20, 0.3);
   }
 }
 

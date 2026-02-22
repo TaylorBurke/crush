@@ -43,7 +43,7 @@ export function SmartInput({ onSubmit, isLoading = false, feedback = null, onFee
         onKeyDown={handleKeyDown}
         placeholder={isLoading ? 'thinking...' : "what's next?"}
         disabled={isLoading}
-        className="w-full rounded-xl border border-border bg-surface px-5 py-3.5 text-text-primary placeholder-text-muted shadow-sm outline-none transition-all focus:border-border-focus focus:ring-2 focus:ring-ring disabled:opacity-60"
+        className="w-full rounded-xl border border-border bg-input-bg px-5 py-3.5 text-text-primary placeholder-text-muted shadow-md outline-none transition-all focus:border-border-focus focus:ring-2 focus:ring-ring disabled:opacity-60"
         autoFocus
       />
     </div>
