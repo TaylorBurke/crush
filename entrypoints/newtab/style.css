@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --animate-confirm-check: confirm-check 1.2s ease-out forwards;
+  --animate-feedback-fade: feedback-fade 3s ease-in-out forwards;
 
   /* Semantic color tokens - light theme defaults */
   --color-bg-gradient-from: #faf5eb;
@@ -59,26 +59,11 @@
   }
 }
 
-@keyframes confirm-check {
-  0% {
-    opacity: 0;
-    transform: translateY(-50%) scale(0.5);
-  }
-  20% {
-    opacity: 1;
-    transform: translateY(-50%) scale(1.15);
-  }
-  35% {
-    transform: translateY(-50%) scale(1) rotate(0deg);
-  }
-  70% {
-    opacity: 1;
-    transform: translateY(-50%) rotate(0deg);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(10px) rotate(60deg);
-  }
+@keyframes feedback-fade {
+  0%   { opacity: 0; transform: translateY(4px); }
+  10%  { opacity: 1; transform: translateY(0); }
+  75%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-2px); }
 }
 
 body {

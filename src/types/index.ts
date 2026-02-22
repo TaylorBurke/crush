@@ -1,5 +1,6 @@
 export type TaskStatus = 'active' | 'completed' | 'deferred' | 'someday';
 export type Importance = 'high' | 'medium' | 'low';
+export type TaskAction = 'create' | 'complete' | 'defer';
 
 export interface Task {
   id: string;

@@ -36,4 +36,24 @@ describe('SmartInput', () => {
     render(<SmartInput onSubmit={() => {}} isLoading={true} />);
     expect(screen.getByPlaceholderText(/thinking/i)).toBeInTheDocument();
   });
+
+  it('renders feedback message when feedback is provided', () => {
+    render(<SmartInput onSubmit={() => {}} feedback={{ message: 'Task completed' }} />);
+    expect(screen.getByText('Task completed')).toBeInTheDocument();
+  });
+
+  it('does not render feedback when feedback is null', () => {
+    render(<SmartInput onSubmit={() => {}} feedback={null} />);
+    expect(screen.queryByText('Task completed')).not.toBeInTheDocument();
+  });
+
+  it('calls onFeedbackDone after timeout', async () => {
+    vi.useFakeTimers();
+    const onFeedbackDone = vi.fn();
+    render(<SmartInput onSubmit={() => {}} feedback={{ message: 'done' }} onFeedbackDone={onFeedbackDone} />);
+    expect(onFeedbackDone).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(3000);
+    expect(onFeedbackDone).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
 });

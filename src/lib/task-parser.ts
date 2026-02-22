@@ -1,4 +1,4 @@
-import type { Task, Importance } from '../types';
+import type { Task, Importance, TaskAction } from '../types';
 
 interface ParsedTaskFields {
   title: string;
@@ -8,13 +8,15 @@ interface ParsedTaskFields {
   blocks: string[];
   blockedBy: string[];
   cluster: string | null;
+  action: TaskAction;
+  targetTaskId: string | null;
 }
 
 interface Message { role: 'system' | 'user'; content: string; }
 
-export function buildParsePrompt(rawText: string, existingTasks: Pick<Task, 'id' | 'parsed'>[]): Message[] {
+export function buildParsePrompt(rawText: string, existingTasks: Pick<Task, 'id' | 'parsed' | 'status'>[]): Message[] {
   const taskList = existingTasks.length > 0
-    ? existingTasks.map((t) => `- [${t.id}] ${t.parsed.title}`).join('\n')
+    ? existingTasks.map((t) => `- [${t.id}] ${t.parsed.title} (${t.status})`).join('\n')
     : '(none)';
   const today = new Date().toISOString().split('T')[0];
 
@@ -26,6 +28,8 @@ Today's date is ${today}.
 
 Respond with JSON only (no markdown, no explanation):
 {
+  "action": "create" | "complete" | "defer",
+  "targetTaskId": "existing-task-id or null",
   "title": "Clean, concise task title",
   "deadline": "YYYY-MM-DD or null",
   "importance": "high" | "medium" | "low",
@@ -36,6 +40,13 @@ Respond with JSON only (no markdown, no explanation):
 }
 
 Rules:
+- "action": Determine the user's intent:
+  "complete": user says they finished/done something matching an existing task (e.g. "I finished the pitch deck", "done with taxes", "completed the report").
+  "defer": user is pushing something off (e.g. "not today", "defer the pitch deck", "push to tomorrow").
+  "create": new task (default when no existing task matches).
+  Only match against active or deferred tasks, not already-completed ones.
+  When in doubt, default to "create".
+- "targetTaskId": When action is "complete" or "defer", set this to the ID of the matching existing task. Set to null for "create".
 - "title": Rewrite as a clear, actionable title. Capitalize first word.
 - "deadline": Parse relative dates (e.g., "friday" = next friday, "tomorrow", "next week"). Use null if no deadline mentioned.
 - "importance": Infer from the emotional weight and intent of the user's language, not just keywords.
@@ -54,6 +65,12 @@ Rules:
 export function parseAIResponse(responseText: string): ParsedTaskFields {
   try {
     const data = JSON.parse(responseText);
+    const action: TaskAction = (['create', 'complete', 'defer'].includes(data.action) ? data.action : 'create') as TaskAction;
+    const targetTaskId: string | null = data.targetTaskId || null;
+
+    // If action is complete/defer but targetTaskId is missing, fall back to create
+    const finalAction = (action === 'complete' || action === 'defer') && !targetTaskId ? 'create' : action;
+
     return {
       title: data.title || responseText,
       deadline: data.deadline || null,
@@ -62,8 +79,10 @@ export function parseAIResponse(responseText: string): ParsedTaskFields {
       blocks: Array.isArray(data.blocks) ? data.blocks : [],
       blockedBy: Array.isArray(data.blockedBy) ? data.blockedBy : [],
       cluster: data.cluster || null,
+      action: finalAction,
+      targetTaskId: finalAction === 'create' ? null : targetTaskId,
     };
   } catch {
-    return { title: responseText, deadline: null, importance: 'medium', tags: [], blocks: [], blockedBy: [], cluster: null };
+    return { title: responseText, deadline: null, importance: 'medium', tags: [], blocks: [], blockedBy: [], cluster: null, action: 'create', targetTaskId: null };
   }
 }

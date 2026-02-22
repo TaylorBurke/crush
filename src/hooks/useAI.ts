@@ -12,9 +12,9 @@ export function useAI(apiKey: string) {
   const [chatting, setChatting] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 
-  const parseTask = useCallback(async (rawText: string, existingTasks: Pick<Task, 'id' | 'parsed'>[]) => {
+  const parseTask = useCallback(async (rawText: string, existingTasks: Pick<Task, 'id' | 'parsed' | 'status'>[]) => {
     if (!apiKey) {
-      return { title: rawText, deadline: null, importance: 'medium' as const, tags: [] as string[], blocks: [] as string[], blockedBy: [] as string[], cluster: null };
+      return { title: rawText, deadline: null, importance: 'medium' as const, tags: [] as string[], blocks: [] as string[], blockedBy: [] as string[], cluster: null, action: 'create' as const, targetTaskId: null };
     }
     setParsing(true);
     try {
@@ -23,7 +23,7 @@ export function useAI(apiKey: string) {
       return parseAIResponse(response);
     } catch (error) {
       console.error('AI parse failed, using raw text:', error);
-      return { title: rawText, deadline: null, importance: 'medium' as const, tags: [] as string[], blocks: [] as string[], blockedBy: [] as string[], cluster: null };
+      return { title: rawText, deadline: null, importance: 'medium' as const, tags: [] as string[], blocks: [] as string[], blockedBy: [] as string[], cluster: null, action: 'create' as const, targetTaskId: null };
     } finally {
       setParsing(false);
     }
