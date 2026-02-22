@@ -5,6 +5,7 @@ import { SmartInput } from './components/SmartInput';
 import { FocusCards } from './components/FocusCards';
 import { NudgeSection } from './components/NudgeSection';
 import { SomedayBucket } from './components/SomedayBucket';
+import { SettingsPanel } from './components/SettingsPanel';
 
 export default function App() {
   const {
@@ -36,6 +37,7 @@ export default function App() {
       <FocusCards tasks={focusTasks} nudges={[]} onComplete={completeTask} onDefer={deferTask} />
       <NudgeSection tasks={deferredTasks} onComplete={completeTask} onDefer={deferTask} />
       <SomedayBucket tasks={somedayTasks} onComplete={completeTask} onDefer={deferTask} />
+      <SettingsPanel />
     </div>
   );
 }
