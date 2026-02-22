@@ -17,7 +17,7 @@ export function SettingsPanel() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 right-4 rounded-full bg-stone-200 p-2.5 text-stone-500 transition-colors hover:bg-stone-300"
+        className="fixed bottom-4 right-4 rounded-full bg-surface-hover p-2.5 text-text-muted transition-colors hover:bg-surface hover:text-text-secondary"
         aria-label="settings"
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -28,28 +28,28 @@ export function SettingsPanel() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20" onClick={() => setOpen(false)}>
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="mb-4 text-lg font-medium text-stone-800">settings</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay" onClick={() => setOpen(false)}>
+      <div className="w-full max-w-md rounded-2xl border border-border bg-[var(--color-bg-gradient-from)] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <h2 className="mb-4 text-lg font-medium text-text-primary">settings</h2>
         <div className="mb-4">
-          <label className="mb-1 block text-sm text-stone-600">OpenAI API Key</label>
+          <label className="mb-1 block text-sm text-text-secondary">OpenAI API Key</label>
           {hasApiKey ? (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-emerald-600">key saved</span>
-              <button onClick={() => updateSettings({ openaiApiKey: '' })} className="text-xs text-stone-400 hover:text-stone-600">remove</button>
+              <span className="text-sm text-success">key saved</span>
+              <button onClick={() => updateSettings({ openaiApiKey: '' })} className="text-xs text-text-muted hover:text-text-secondary">remove</button>
             </div>
           ) : (
             <div className="flex gap-2">
-              <input type="password" value={keyInput} onChange={(e) => setKeyInput(e.target.value)} placeholder="sk-..." className="flex-1 rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-amber-300" />
-              <button onClick={handleSaveKey} className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500">save</button>
+              <input type="password" value={keyInput} onChange={(e) => setKeyInput(e.target.value)} placeholder="sk-..." className="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder-text-muted outline-none focus:border-border-focus" />
+              <button onClick={handleSaveKey} className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover">save</button>
             </div>
           )}
         </div>
         <div className="mb-6">
-          <label className="mb-1 block text-sm text-stone-600">Your Name</label>
-          <input type="text" value={settings.userName} onChange={(e) => updateSettings({ userName: e.target.value })} placeholder="what should crush call you?" className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-amber-300" />
+          <label className="mb-1 block text-sm text-text-secondary">Your Name</label>
+          <input type="text" value={settings.userName} onChange={(e) => updateSettings({ userName: e.target.value })} placeholder="what should crush call you?" className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder-text-muted outline-none focus:border-border-focus" />
         </div>
-        <button onClick={() => setOpen(false)} className="w-full rounded-lg bg-stone-100 py-2 text-sm text-stone-600 hover:bg-stone-200">close</button>
+        <button onClick={() => setOpen(false)} className="w-full rounded-lg bg-surface-hover py-2 text-sm text-text-secondary hover:bg-surface">close</button>
       </div>
     </div>
   );

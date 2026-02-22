@@ -13,9 +13,9 @@ export function SomedayBucket({ tasks, onComplete, onDefer }: SomedayBucketProps
   if (tasks.length === 0) return null;
   return (
     <section className="mb-8">
-      <button onClick={() => setExpanded(!expanded)} className="flex items-center gap-2 text-sm font-medium tracking-wide text-stone-400 uppercase">
+      <button onClick={() => setExpanded(!expanded)} className="flex items-center gap-2 text-sm font-medium tracking-wide text-text-muted uppercase">
         <span>someday</span>
-        <span className="rounded-full bg-stone-200 px-2 py-0.5 text-xs text-stone-500">{tasks.length}</span>
+        <span className="rounded-full bg-surface-hover px-2 py-0.5 text-xs text-text-muted">{tasks.length}</span>
         <span className="text-xs">{expanded ? '−' : '+'}</span>
       </button>
       {expanded && (

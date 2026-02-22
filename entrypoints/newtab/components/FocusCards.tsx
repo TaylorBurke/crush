@@ -13,7 +13,7 @@ export function FocusCards({ tasks, nudges, onComplete, onDefer }: FocusCardsPro
   const nudgeMap = Object.fromEntries(nudges.map((n) => [n.taskId, n.message]));
   return (
     <section className="mb-8">
-      <h2 className="mb-4 text-sm font-medium tracking-wide text-stone-400 uppercase">focus on these</h2>
+      <h2 className="mb-4 text-sm font-medium tracking-wide text-text-muted uppercase">focus on these</h2>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {tasks.map((task) => (
           <TaskCard key={task.id} task={task} nudge={nudgeMap[task.id]} onComplete={onComplete} onDefer={onDefer} />

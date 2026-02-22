@@ -15,12 +15,12 @@ export function ClusterSection({ cluster, tasks, onComplete, onDefer }: ClusterS
   return (
     <section className="mb-6">
       <button onClick={() => setExpanded(!expanded)} className="flex w-full items-center gap-3 text-left">
-        <h2 className="text-sm font-medium tracking-wide text-stone-400 uppercase">{cluster.name}</h2>
-        <div className="h-1.5 flex-1 rounded-full bg-stone-200">
-          <div className="h-1.5 rounded-full bg-amber-400 transition-all" style={{ width: `${percentage}%` }} />
+        <h2 className="text-sm font-medium tracking-wide text-text-muted uppercase">{cluster.name}</h2>
+        <div className="h-1.5 flex-1 rounded-full bg-progress-bg">
+          <div className="h-1.5 rounded-full bg-progress-fill transition-all" style={{ width: `${percentage}%` }} />
         </div>
-        <span className="text-xs text-stone-400">{tasks.filter((t) => t.status === 'completed').length}/{tasks.length}</span>
-        <span className="text-xs text-stone-400">{expanded ? '−' : '+'}</span>
+        <span className="text-xs text-text-muted">{tasks.filter((t) => t.status === 'completed').length}/{tasks.length}</span>
+        <span className="text-xs text-text-muted">{expanded ? '−' : '+'}</span>
       </button>
       {expanded && (
         <div className="mt-2 space-y-1 pl-2">

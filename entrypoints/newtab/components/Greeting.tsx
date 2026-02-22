@@ -6,7 +6,7 @@ export function Greeting() {
 
   return (
     <div className="mb-8">
-      <h1 className="text-2xl font-light text-stone-700 tracking-tight">
+      <h1 className="text-2xl font-light text-text-primary tracking-tight">
         {greeting} here's your {day}.
       </h1>
     </div>

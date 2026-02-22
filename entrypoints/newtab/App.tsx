@@ -51,36 +51,38 @@ export default function App() {
   };
 
   return (
-    <div className="mx-auto min-h-screen max-w-2xl bg-stone-50 px-6 py-12">
-      <div className="flex items-start justify-between">
-        <Greeting />
-        {hasApiKey && (
-          <button onClick={() => setChatOpen(true)} className="rounded-lg bg-amber-100 px-4 py-2 text-sm text-amber-700 transition-colors hover:bg-amber-200">
-            ask crush
-          </button>
-        )}
-      </div>
-
-      <SmartInput onSubmit={handleSubmit} isLoading={ai.isParsing} />
-
-      {!hasApiKey && tasks.length === 0 && (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center">
-          <p className="text-sm text-amber-800">add your OpenAI API key in settings to unlock AI-powered task parsing, daily briefs, and smart prioritization.</p>
-          <p className="mt-2 text-xs text-amber-600">click the gear icon in the bottom-right corner.</p>
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_center,var(--color-bg-gradient-from),var(--color-bg-gradient-to))]">
+      <div className="mx-auto max-w-2xl px-6 py-12">
+        <div className="flex items-start justify-between">
+          <Greeting />
+          {hasApiKey && (
+            <button onClick={() => setChatOpen(true)} className="rounded-lg bg-accent-soft px-4 py-2 text-sm text-accent-text transition-colors hover:bg-accent-hover hover:text-white">
+              ask crush
+            </button>
+          )}
         </div>
-      )}
 
-      <FocusCards tasks={focusTasks} nudges={nudges} onComplete={completeTask} onDefer={deferTask} />
-      <NudgeSection tasks={deferredTasks} onComplete={completeTask} onDefer={deferTask} />
+        <SmartInput onSubmit={handleSubmit} isLoading={ai.isParsing} />
 
-      {clusters.map((cluster) => {
-        const clusterTasks = cluster.taskIds.map((id) => tasks.find((t) => t.id === id)).filter(Boolean) as typeof tasks;
-        return <ClusterSection key={cluster.id} cluster={cluster} tasks={clusterTasks} onComplete={completeTask} onDefer={deferTask} />;
-      })}
+        {!hasApiKey && tasks.length === 0 && (
+          <div className="rounded-2xl border border-border bg-accent-soft p-6 text-center">
+            <p className="text-sm text-accent-text">add your OpenAI API key in settings to unlock AI-powered task parsing, daily briefs, and smart prioritization.</p>
+            <p className="mt-2 text-xs text-text-muted">click the gear icon in the bottom-right corner.</p>
+          </div>
+        )}
 
-      <SomedayBucket tasks={somedayTasks} onComplete={completeTask} onDefer={deferTask} />
-      <AIChatPanel open={chatOpen} onClose={() => setChatOpen(false)} onSend={handleChat} messages={ai.chatHistory} isLoading={ai.isChatting} />
-      <SettingsPanel />
+        <FocusCards tasks={focusTasks} nudges={nudges} onComplete={completeTask} onDefer={deferTask} />
+        <NudgeSection tasks={deferredTasks} onComplete={completeTask} onDefer={deferTask} />
+
+        {clusters.map((cluster) => {
+          const clusterTasks = cluster.taskIds.map((id) => tasks.find((t) => t.id === id)).filter(Boolean) as typeof tasks;
+          return <ClusterSection key={cluster.id} cluster={cluster} tasks={clusterTasks} onComplete={completeTask} onDefer={deferTask} />;
+        })}
+
+        <SomedayBucket tasks={somedayTasks} onComplete={completeTask} onDefer={deferTask} />
+        <AIChatPanel open={chatOpen} onClose={() => setChatOpen(false)} onSend={handleChat} messages={ai.chatHistory} isLoading={ai.isChatting} />
+        <SettingsPanel />
+      </div>
     </div>
   );
 }
