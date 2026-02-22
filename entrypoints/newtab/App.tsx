@@ -38,16 +38,25 @@ export default function App() {
 
   const handleSubmit = async (text: string) => {
     const parsed = await ai.parseTask(text, tasks);
-    addTask({
+    const newTask = addTask({
       text,
       parsed: { title: parsed.title, deadline: parsed.deadline, tags: parsed.tags },
       importance: parsed.importance,
       relationships: { blocks: parsed.blocks, blockedBy: parsed.blockedBy, cluster: parsed.cluster },
     });
+    // Regenerate the computed view with the new task included
+    if (hasApiKey && newTask) {
+      const updatedTasks = [...tasks, newTask];
+      ai.generateBrief(updatedTasks, true).then((view) => { if (view) setComputedView(view); });
+    }
   };
 
   const handleChat = async (message: string) => {
-    return ai.chat(message, tasks, computedView);
+    const { response, recomputeContext } = await ai.chat(message, tasks, computedView);
+    if (recomputeContext && hasApiKey) {
+      ai.generateBrief(tasks, true, recomputeContext).then((view) => { if (view) setComputedView(view); });
+    }
+    return response;
   };
 
   return (

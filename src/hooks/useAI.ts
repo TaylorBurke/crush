@@ -29,15 +29,17 @@ export function useAI(apiKey: string) {
     }
   }, [apiKey]);
 
-  const generateBrief = useCallback(async (tasks: Task[]): Promise<ComputedView | null> => {
+  const generateBrief = useCallback(async (tasks: Task[], force = false, chatContext?: string): Promise<ComputedView | null> => {
     if (!apiKey) return null;
-    const lastDate = BriefStorage.getLastDate();
-    if (!isNewDay(lastDate)) return ViewStorage.get();
+    if (!force) {
+      const lastDate = BriefStorage.getLastDate();
+      if (!isNewDay(lastDate)) return ViewStorage.get();
+    }
     setBriefing(true);
     try {
       const nonCompleted = tasks.filter((t) => t.status !== 'completed');
       if (nonCompleted.length === 0) return null;
-      const messages = buildDailyBriefPrompt(tasks);
+      const messages = buildDailyBriefPrompt(tasks, chatContext);
       const response = await callOpenAI({ apiKey, messages, responseFormat: { type: 'json_object' } });
       const view = parseBriefResponse(response);
       ViewStorage.save(view);
@@ -51,31 +53,36 @@ export function useAI(apiKey: string) {
     }
   }, [apiKey]);
 
-  const chat = useCallback(async (userMessage: string, tasks: Task[], currentView: ComputedView | null): Promise<string> => {
+  const chat = useCallback(async (userMessage: string, tasks: Task[], currentView: ComputedView | null): Promise<{ response: string; recomputeContext: string | null }> => {
     setChatting(true);
     const newUserMsg: ChatMessage = { role: 'user', content: userMessage, timestamp: new Date().toISOString() };
     setChatHistory((prev) => [...prev, newUserMsg]);
     try {
       const taskSummary = tasks.filter((t) => t.status !== 'completed').map((t) => `- "${t.parsed.title}" (${t.status}, importance: ${t.importance})`).join('\n');
-      const response = await callOpenAI({
+      const rawResponse = await callOpenAI({
         apiKey,
         messages: [
           {
             role: 'system',
-            content: `You are a warm, supportive task advisor named Crush. You help the user manage their tasks, prioritize, break down work, and stay motivated.\n\nCurrent tasks:\n${taskSummary}\n\n${currentView ? `Today's focus: ${currentView.focusToday.join(', ')}` : ''}\n\nBe concise, casual, lowercase. Sound like a supportive friend, not a corporate tool.`,
+            content: `You are a warm, supportive task advisor named Crush. You help the user manage their tasks, prioritize, break down work, and stay motivated.\n\nCurrent tasks:\n${taskSummary}\n\n${currentView ? `Today's focus: ${currentView.focusToday.join(', ')}` : ''}\n\nBe concise, casual, lowercase. Sound like a supportive friend, not a corporate tool.\n\nIMPORTANT: If the conversation leads you to believe the user's task priorities, focus, or organization should change (e.g. they want to reprioritize, shift focus, reorganize their day, or mention something that affects task urgency), append the following marker at the very end of your response on its own line:\n[RECOMPUTE: brief summary of what changed]\n\nExamples of when to use this:\n- "i want to focus on design stuff today" → [RECOMPUTE: user wants to focus on design-related tasks today]\n- "actually X is way more urgent than Y" → [RECOMPUTE: user indicated X is more urgent than Y]\n- "can you reorganize my day?" → [RECOMPUTE: user requested day reorganization]\n\nDo NOT use this marker for general questions, motivation, or task breakdowns that don't change priorities.`,
           },
           ...chatHistory.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
           { role: 'user' as const, content: userMessage },
         ],
       });
+
+      const recomputeMatch = rawResponse.match(/\[RECOMPUTE:\s*(.+?)\]\s*$/);
+      const recomputeContext = recomputeMatch ? recomputeMatch[1] : null;
+      const response = recomputeMatch ? rawResponse.slice(0, recomputeMatch.index).trimEnd() : rawResponse;
+
       const assistantMsg: ChatMessage = { role: 'assistant', content: response, timestamp: new Date().toISOString() };
       setChatHistory((prev) => [...prev, assistantMsg]);
-      return response;
+      return { response, recomputeContext };
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : 'something went wrong';
       const errorResponse: ChatMessage = { role: 'assistant', content: `sorry, I hit an error: ${errMsg}`, timestamp: new Date().toISOString() };
       setChatHistory((prev) => [...prev, errorResponse]);
-      return errorResponse.content;
+      return { response: errorResponse.content, recomputeContext: null };
     } finally {
       setChatting(false);
     }
