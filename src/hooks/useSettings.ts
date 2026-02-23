@@ -73,11 +73,13 @@ export function useSettings() {
     });
   }, []);
 
-  const updateSettings = useCallback(async (updates: Partial<Settings>) => {
-    const next = { ...settings, ...updates };
-    setSettings(next);
-    await storage.set(next);
-  }, [settings, storage]);
+  const updateSettings = useCallback((updates: Partial<Settings>) => {
+    setSettings(prev => {
+      const next = { ...prev, ...updates };
+      storage.set(next);
+      return next;
+    });
+  }, [storage]);
 
   const hasApiKey = Boolean(settings.apiKey);
 
