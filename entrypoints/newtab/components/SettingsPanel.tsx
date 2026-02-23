@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchModels, PROVIDER_CONFIG } from '../../../src/lib/ai-client';
+import { THEME_PRESETS } from '../../../src/lib/themes';
 import type { Provider, Bookmark, Settings } from '../../../src/types';
 
 interface SettingsPanelProps {
@@ -106,6 +107,26 @@ export function SettingsPanel({ settings, updateSettings, hasApiKey }: SettingsP
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay" onClick={() => setOpen(false)}>
       <div className="w-full max-w-md rounded-2xl border border-border bg-[var(--color-bg-gradient-from)] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <h2 className="mb-4 text-lg font-medium text-text-primary">settings</h2>
+
+        <div className="mb-4">
+          <label className="mb-2 block text-sm text-text-secondary">Theme</label>
+          <div className="flex gap-2">
+            {THEME_PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                onClick={() => updateSettings({ theme: preset.id })}
+                className={`h-7 w-7 rounded-full transition-all hover:scale-110 ${
+                  settings.theme === preset.id
+                    ? 'ring-2 ring-text-primary ring-offset-2 ring-offset-[var(--color-bg-gradient-from)]'
+                    : 'opacity-70 hover:opacity-100'
+                }`}
+                style={{ backgroundColor: preset.dot }}
+                title={preset.name}
+                aria-label={`${preset.name} theme`}
+              />
+            ))}
+          </div>
+        </div>
 
         <div className="mb-4">
           <label className="mb-1 block text-sm text-text-secondary">Provider</label>
