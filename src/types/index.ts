@@ -70,4 +70,5 @@ export interface Settings {
   userName: string;
   showBookmarks: boolean;
   bookmarks: Bookmark[];
+  theme: string;
 }

@@ -59,6 +59,9 @@ describe('types', () => {
       apiKey: 'sk-or-test',
       model: 'anthropic/claude-haiku-4-5',
       userName: 'Taylor',
+      showBookmarks: false,
+      bookmarks: [],
+      theme: 'gold',
     };
     expect(s.provider).toBe('openrouter');
     expect(s.model).toBe('anthropic/claude-haiku-4-5');
@@ -83,8 +86,22 @@ describe('types', () => {
       userName: 'Taylor',
       showBookmarks: true,
       bookmarks: [{ id: 'bm-1', url: 'https://github.com', label: 'github', icon: '🐙' }],
+      theme: 'gold',
     };
     expect(s.showBookmarks).toBe(true);
     expect(s.bookmarks).toHaveLength(1);
+  });
+
+  it('should create Settings with theme', () => {
+    const s: Settings = {
+      provider: 'openai',
+      apiKey: 'sk-test',
+      model: '',
+      userName: 'Taylor',
+      showBookmarks: false,
+      bookmarks: [],
+      theme: 'ocean',
+    };
+    expect(s.theme).toBe('ocean');
   });
 });
