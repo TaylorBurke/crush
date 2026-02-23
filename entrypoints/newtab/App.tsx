@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTasks } from '../../src/hooks/useTasks';
 import { useSettings } from '../../src/hooks/useSettings';
 import { useAI } from '../../src/hooks/useAI';
@@ -16,23 +16,11 @@ import type { ComputedView } from '../../src/types';
 
 export default function App() {
   const { tasks, activeTasks, deferredTasks, somedayTasks, addTask, completeTask, deferTask } = useTasks();
-  const { settings, hasApiKey } = useSettings();
+  const { settings, updateSettings, hasApiKey } = useSettings();
   const ai = useAI(settings.apiKey, settings.provider, settings.model);
   const [computedView, setComputedView] = useState<ComputedView | null>(() => ViewStorage.get());
   const [chatOpen, setChatOpen] = useState(false);
   const [feedback, setFeedback] = useState<{ message: string } | null>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [hasRoom, setHasRoom] = useState(true);
-
-  useEffect(() => {
-    const el = contentRef.current;
-    if (!el) return;
-    const observer = new ResizeObserver(() => {
-      setHasRoom(el.getBoundingClientRect().left >= 56);
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     if (hasApiKey && tasks.length > 0) {
@@ -111,7 +99,7 @@ export default function App() {
   return (
     <div className="flex h-screen bg-[radial-gradient(ellipse_at_center,var(--color-bg-gradient-from),var(--color-bg-gradient-to))]">
       <div className="flex-1 overflow-y-auto transition-all duration-300 ease-in-out">
-        <div ref={contentRef} className="mx-auto max-w-2xl px-6 py-12">
+        <div className="mx-auto max-w-2xl px-6 py-12">
           <Greeting />
 
           <SmartInput
@@ -141,7 +129,7 @@ export default function App() {
         </div>
       </div>
 
-      {settings.showBookmarks && !chatOpen && hasRoom && settings.bookmarks.length > 0 && (
+      {settings.showBookmarks && !chatOpen && settings.bookmarks.length > 0 && (
         <BookmarkBar bookmarks={settings.bookmarks} />
       )}
 
@@ -159,7 +147,7 @@ export default function App() {
         </button>
       )}
 
-      <SettingsPanel />
+      <SettingsPanel settings={settings} updateSettings={updateSettings} hasApiKey={hasApiKey} />
     </div>
   );
 }

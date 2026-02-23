@@ -19,7 +19,7 @@ export function BookmarkBar({ bookmarks }: BookmarkBarProps) {
           key={bm.id}
           href={bm.url}
           title={bm.label}
-          className="flex h-9 w-9 items-center justify-center rounded-lg opacity-70 transition-all hover:scale-110 hover:opacity-100"
+          className="flex h-9 w-9 items-center justify-center rounded-lg opacity-40 transition-all hover:scale-110 hover:opacity-100"
         >
           <BookmarkIcon icon={bm.icon} />
         </a>

@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useSettings } from '../../../src/hooks/useSettings';
 import { fetchModels, PROVIDER_CONFIG } from '../../../src/lib/ai-client';
-import type { Provider, Bookmark } from '../../../src/types';
+import type { Provider, Bookmark, Settings } from '../../../src/types';
 
-export function SettingsPanel() {
-  const { settings, updateSettings, hasApiKey } = useSettings();
+interface SettingsPanelProps {
+  settings: Settings;
+  updateSettings: (updates: Partial<Settings>) => void;
+  hasApiKey: boolean;
+}
+
+export function SettingsPanel({ settings, updateSettings, hasApiKey }: SettingsPanelProps) {
   const [open, setOpen] = useState(false);
   const [keyInput, setKeyInput] = useState('');
   const [modelInput, setModelInput] = useState('');
@@ -88,7 +92,7 @@ export function SettingsPanel() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className={`fixed bottom-4 ${settings.showBookmarks && settings.bookmarks.length > 0 ? 'left-14' : 'left-4'} rounded-full bg-surface-hover p-2.5 text-text-muted transition-all hover:bg-surface hover:text-text-secondary`}
+        className="fixed bottom-4 left-4 rounded-full bg-surface-hover p-2.5 text-text-muted transition-all hover:bg-surface hover:text-text-secondary"
         aria-label="settings"
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
