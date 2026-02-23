@@ -56,9 +56,18 @@ export interface ChatMessage {
 
 export type Provider = 'openai' | 'openrouter';
 
+export interface Bookmark {
+  id: string;
+  url: string;
+  label: string;
+  icon: string;
+}
+
 export interface Settings {
   provider: Provider;
   apiKey: string;
   model: string;
   userName: string;
+  showBookmarks: boolean;
+  bookmarks: Bookmark[];
 }

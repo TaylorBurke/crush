@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSettings } from '../../../src/hooks/useSettings';
 import { fetchModels, PROVIDER_CONFIG } from '../../../src/lib/ai-client';
-import type { Provider } from '../../../src/types';
+import type { Provider, Bookmark } from '../../../src/types';
 
 export function SettingsPanel() {
   const { settings, updateSettings, hasApiKey } = useSettings();
@@ -42,13 +42,53 @@ export function SettingsPanel() {
     updateSettings({ model: modelInput.trim() });
   };
 
+  const handleAddBookmark = () => {
+    if (settings.bookmarks.length >= 6) return;
+    const newBookmark: Bookmark = {
+      id: `bm-${Date.now()}`,
+      url: '',
+      label: '',
+      icon: '',
+    };
+    updateSettings({ bookmarks: [...settings.bookmarks, newBookmark] });
+  };
+
+  const handleUpdateBookmark = (id: string, updates: Partial<Bookmark>) => {
+    const updated = settings.bookmarks.map((bm) =>
+      bm.id === id ? { ...bm, ...updates } : bm,
+    );
+    updateSettings({ bookmarks: updated });
+  };
+
+  const handleBookmarkUrlBlur = (id: string, url: string) => {
+    if (!url) return;
+    try {
+      const domain = new URL(url).hostname;
+      const bm = settings.bookmarks.find((b) => b.id === id);
+      const updates: Partial<Bookmark> = {
+        url,
+        label: bm?.label || domain.replace('www.', ''),
+      };
+      if (!bm?.icon) {
+        updates.icon = `https://www.google.com/s2/favicons?sz=32&domain=${domain}`;
+      }
+      handleUpdateBookmark(id, updates);
+    } catch {
+      handleUpdateBookmark(id, { url });
+    }
+  };
+
+  const handleRemoveBookmark = (id: string) => {
+    updateSettings({ bookmarks: settings.bookmarks.filter((bm) => bm.id !== id) });
+  };
+
   const config = PROVIDER_CONFIG[settings.provider];
 
   if (!open) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 left-4 rounded-full bg-surface-hover p-2.5 text-text-muted transition-colors hover:bg-surface hover:text-text-secondary"
+        className={`fixed bottom-4 ${settings.showBookmarks && settings.bookmarks.length > 0 ? 'left-14' : 'left-4'} rounded-full bg-surface-hover p-2.5 text-text-muted transition-all hover:bg-surface hover:text-text-secondary`}
         aria-label="settings"
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -119,10 +159,64 @@ export function SettingsPanel() {
           )}
         </div>
 
-        <div className="mb-6">
+        <div className="mb-4">
           <label className="mb-1 block text-sm text-text-secondary">Your Name</label>
           <input type="text" value={settings.userName} onChange={(e) => updateSettings({ userName: e.target.value })} placeholder="what should crush call you?" className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder-text-muted outline-none focus:border-border-focus" />
         </div>
+
+        <div className="mb-6">
+          <div className="mb-2 flex items-center justify-between">
+            <label className="text-sm text-text-secondary">Bookmarks</label>
+            <label className="flex items-center gap-2 text-xs text-text-muted">
+              <input
+                type="checkbox"
+                checked={settings.showBookmarks}
+                onChange={(e) => updateSettings({ showBookmarks: e.target.checked })}
+                className="accent-accent"
+              />
+              show bar
+            </label>
+          </div>
+          <div className="space-y-2">
+            {settings.bookmarks.map((bm) => (
+              <div key={bm.id} className="flex gap-2">
+                <input
+                  type="text"
+                  defaultValue={bm.url}
+                  onBlur={(e) => handleBookmarkUrlBlur(bm.id, e.target.value.trim())}
+                  placeholder="https://..."
+                  className="flex-1 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-text-primary placeholder-text-muted outline-none focus:border-border-focus"
+                />
+                <input
+                  type="text"
+                  defaultValue={bm.icon.startsWith('http') ? '' : bm.icon}
+                  onBlur={(e) => {
+                    const val = e.target.value.trim();
+                    if (val) handleUpdateBookmark(bm.id, { icon: val });
+                  }}
+                  placeholder="emoji or url"
+                  className="w-24 rounded-lg border border-border bg-surface px-2 py-1.5 text-sm text-text-primary placeholder-text-muted outline-none focus:border-border-focus"
+                />
+                <button
+                  onClick={() => handleRemoveBookmark(bm.id)}
+                  className="text-text-muted hover:text-text-secondary"
+                  aria-label="remove bookmark"
+                >
+                  &#10005;
+                </button>
+              </div>
+            ))}
+          </div>
+          {settings.bookmarks.length < 6 && (
+            <button
+              onClick={handleAddBookmark}
+              className="mt-2 text-xs text-text-muted hover:text-text-secondary"
+            >
+              + add bookmark
+            </button>
+          )}
+        </div>
+
         <button onClick={() => setOpen(false)} className="w-full rounded-lg bg-surface-hover py-2 text-sm text-text-secondary hover:bg-surface">close</button>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Task, ComputedView, TaskStatus, Importance, Provider, Settings } from '../types';
+import type { Task, ComputedView, TaskStatus, Importance, Provider, Settings, Bookmark } from '../types';
 
 describe('types', () => {
   it('should create a valid Task', () => {
@@ -62,5 +62,29 @@ describe('types', () => {
     };
     expect(s.provider).toBe('openrouter');
     expect(s.model).toBe('anthropic/claude-haiku-4-5');
+  });
+
+  it('should create a valid Bookmark', () => {
+    const b: Bookmark = {
+      id: 'bm-1',
+      url: 'https://github.com',
+      label: 'github',
+      icon: 'https://www.google.com/s2/favicons?sz=32&domain=github.com',
+    };
+    expect(b.id).toBe('bm-1');
+    expect(b.url).toBe('https://github.com');
+  });
+
+  it('should create Settings with bookmarks', () => {
+    const s: Settings = {
+      provider: 'openai',
+      apiKey: 'sk-test',
+      model: '',
+      userName: 'Taylor',
+      showBookmarks: true,
+      bookmarks: [{ id: 'bm-1', url: 'https://github.com', label: 'github', icon: '🐙' }],
+    };
+    expect(s.showBookmarks).toBe(true);
+    expect(s.bookmarks).toHaveLength(1);
   });
 });

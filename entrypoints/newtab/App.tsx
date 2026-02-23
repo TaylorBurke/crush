@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTasks } from '../../src/hooks/useTasks';
 import { useSettings } from '../../src/hooks/useSettings';
 import { useAI } from '../../src/hooks/useAI';
@@ -11,6 +11,7 @@ import { ClusterSection } from './components/ClusterSection';
 import { SomedayBucket } from './components/SomedayBucket';
 import { AIChatPanel } from './components/AIChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
+import { BookmarkBar } from './components/BookmarkBar';
 import type { ComputedView } from '../../src/types';
 
 export default function App() {
@@ -20,6 +21,18 @@ export default function App() {
   const [computedView, setComputedView] = useState<ComputedView | null>(() => ViewStorage.get());
   const [chatOpen, setChatOpen] = useState(false);
   const [feedback, setFeedback] = useState<{ message: string } | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [hasRoom, setHasRoom] = useState(true);
+
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => {
+      setHasRoom(el.getBoundingClientRect().left >= 56);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (hasApiKey && tasks.length > 0) {
@@ -98,7 +111,7 @@ export default function App() {
   return (
     <div className="flex h-screen bg-[radial-gradient(ellipse_at_center,var(--color-bg-gradient-from),var(--color-bg-gradient-to))]">
       <div className="flex-1 overflow-y-auto transition-all duration-300 ease-in-out">
-        <div className="mx-auto max-w-2xl px-6 py-12">
+        <div ref={contentRef} className="mx-auto max-w-2xl px-6 py-12">
           <Greeting />
 
           <SmartInput
@@ -127,6 +140,10 @@ export default function App() {
           <SomedayBucket tasks={somedayTasks} onComplete={completeTask} onDefer={deferTask} />
         </div>
       </div>
+
+      {settings.showBookmarks && !chatOpen && hasRoom && settings.bookmarks.length > 0 && (
+        <BookmarkBar bookmarks={settings.bookmarks} />
+      )}
 
       <AIChatPanel open={chatOpen} onClose={() => setChatOpen(false)} onSend={handleChat} messages={ai.chatHistory} isLoading={ai.isChatting} />
 

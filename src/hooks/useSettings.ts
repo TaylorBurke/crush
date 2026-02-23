@@ -8,6 +8,8 @@ const defaultSettings: Settings = {
   apiKey: '',
   model: '',
   userName: '',
+  showBookmarks: false,
+  bookmarks: [],
 };
 
 function migrateSettings(raw: Record<string, unknown>): Settings {
@@ -17,6 +19,8 @@ function migrateSettings(raw: Record<string, unknown>): Settings {
       apiKey: (raw.openaiApiKey as string) || '',
       model: '',
       userName: (raw.userName as string) || '',
+      showBookmarks: false,
+      bookmarks: [],
     };
   }
   return {
@@ -24,6 +28,8 @@ function migrateSettings(raw: Record<string, unknown>): Settings {
     apiKey: (raw.apiKey as string) || '',
     model: (raw.model as string) || '',
     userName: (raw.userName as string) || '',
+    showBookmarks: (raw.showBookmarks as boolean) ?? false,
+    bookmarks: (raw.bookmarks as Settings['bookmarks']) ?? [],
   };
 }
 
