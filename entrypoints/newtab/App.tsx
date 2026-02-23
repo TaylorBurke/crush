@@ -12,6 +12,7 @@ import { SomedayBucket } from './components/SomedayBucket';
 import { AIChatPanel } from './components/AIChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { BookmarkBar } from './components/BookmarkBar';
+import { applyTheme } from '../../src/lib/themes';
 import type { ComputedView } from '../../src/types';
 
 export default function App() {
@@ -21,6 +22,16 @@ export default function App() {
   const [computedView, setComputedView] = useState<ComputedView | null>(() => ViewStorage.get());
   const [chatOpen, setChatOpen] = useState(false);
   const [feedback, setFeedback] = useState<{ message: string } | null>(null);
+
+  useEffect(() => {
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(settings.theme, isDark);
+
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e: MediaQueryListEvent) => applyTheme(settings.theme, e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, [settings.theme]);
 
   useEffect(() => {
     if (hasApiKey && tasks.length > 0) {
