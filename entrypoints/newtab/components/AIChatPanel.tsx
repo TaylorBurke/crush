@@ -36,10 +36,14 @@ export function AIChatPanel({ open, onClose, onSend, messages, isLoading }: AICh
             <p className="text-sm text-text-muted italic">ask me anything about your tasks. try "what should i focus on?" or "break down [task]"</p>
           )}
           {messages.map((msg, i) => (
-            <div key={i} className={`text-sm ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
-              <div className={`inline-block rounded-xl px-4 py-2.5 ${msg.role === 'user' ? 'bg-accent-soft text-text-primary' : 'bg-surface text-text-primary'}`}>
-                {msg.content}
-              </div>
+            <div key={i} className="text-sm text-left">
+              {msg.role === 'user' ? (
+                <p className="font-medium text-text-primary">{msg.content}</p>
+              ) : (
+                <div className="rounded-xl bg-surface px-4 py-2.5 text-text-primary">
+                  {msg.content}
+                </div>
+              )}
             </div>
           ))}
           {isLoading && <div className="text-sm text-text-muted">thinking...</div>}
