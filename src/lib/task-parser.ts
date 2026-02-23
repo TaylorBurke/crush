@@ -64,7 +64,9 @@ Rules:
 
 export function parseAIResponse(responseText: string): ParsedTaskFields {
   try {
-    const data = JSON.parse(responseText);
+    // Strip markdown code block wrapper if present (e.g. ```json ... ```)
+    const cleaned = responseText.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+    const data = JSON.parse(cleaned);
     const action: TaskAction = (['create', 'complete', 'defer'].includes(data.action) ? data.action : 'create') as TaskAction;
     const targetTaskId: string | null = data.targetTaskId || null;
 
