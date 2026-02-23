@@ -10,6 +10,7 @@ const defaultSettings: Settings = {
   userName: '',
   showBookmarks: false,
   bookmarks: [],
+  theme: 'gold',
 };
 
 function migrateSettings(raw: Record<string, unknown>): Settings {
@@ -21,6 +22,7 @@ function migrateSettings(raw: Record<string, unknown>): Settings {
       userName: (raw.userName as string) || '',
       showBookmarks: false,
       bookmarks: [],
+      theme: 'gold',
     };
   }
   return {
@@ -30,6 +32,7 @@ function migrateSettings(raw: Record<string, unknown>): Settings {
     userName: (raw.userName as string) || '',
     showBookmarks: (raw.showBookmarks as boolean) ?? false,
     bookmarks: (raw.bookmarks as Settings['bookmarks']) ?? [],
+    theme: (raw.theme as string) ?? 'gold',
   };
 }
 
