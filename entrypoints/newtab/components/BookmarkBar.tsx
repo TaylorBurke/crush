@@ -6,9 +6,9 @@ interface BookmarkBarProps {
 
 function BookmarkIcon({ icon }: { icon: string }) {
   if (icon.startsWith('http')) {
-    return <img src={icon} alt="" className="h-7 w-7 rounded" />;
+    return <img src={icon} alt="" className="h-5 w-5 rounded" />;
   }
-  return <span className="text-xl leading-none">{icon}</span>;
+  return <span className="text-lg leading-none">{icon}</span>;
 }
 
 export function BookmarkBar({ bookmarks }: BookmarkBarProps) {
@@ -19,7 +19,7 @@ export function BookmarkBar({ bookmarks }: BookmarkBarProps) {
           key={bm.id}
           href={bm.url}
           title={bm.label}
-          className="flex h-9 w-9 items-center justify-center rounded-lg opacity-40 transition-all hover:scale-110 hover:opacity-100"
+          className="flex h-10 w-10 items-center justify-center rounded-full opacity-40 transition-all hover:scale-110 hover:opacity-100"
         >
           <BookmarkIcon icon={bm.icon} />
         </a>
