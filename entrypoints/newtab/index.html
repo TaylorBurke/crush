@@ -7,6 +7,29 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      try {
+        var raw = localStorage.getItem('crush-settings');
+        if (raw) {
+          var settings = JSON.parse(raw);
+          var themeId = settings.theme || 'gold';
+          if (themeId !== 'gold') {
+            var themeCache = localStorage.getItem('crush-theme-cache');
+            if (themeCache) {
+              var cached = JSON.parse(themeCache);
+              if (cached.id === themeId) {
+                var isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var vars = isDark ? cached.dark : cached.light;
+                var style = document.documentElement.style;
+                for (var key in vars) {
+                  style.setProperty(key, vars[key]);
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {}
+    </script>
     <script type="module" src="./main.tsx"></script>
   </body>
 </html>
