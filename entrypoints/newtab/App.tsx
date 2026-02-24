@@ -2,8 +2,11 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTasks } from '../../src/hooks/useTasks';
 import { useSettings } from '../../src/hooks/useSettings';
 import { useAI } from '../../src/hooks/useAI';
-import { ViewStorage, TaskStorage, ChatStorage, BriefStorage } from '../../src/lib/storage';
+import { ViewStorage, TaskStorage, ChatStorage, BriefStorage, MemoryStorage, ClusterStorage, ReflectionStorage, runMigrations } from '../../src/lib/storage';
 import { isNewDay } from '../../src/lib/date';
+import { buildContextSnapshot, buildParserContext } from '../../src/lib/context-builder';
+import { buildDailyReflection } from '../../src/lib/reflection';
+import { parseMemoryBlocks } from '../../src/lib/memory-parser';
 import { Greeting } from './components/Greeting';
 import { SmartInput } from './components/SmartInput';
 import { FocusCards } from './components/FocusCards';
@@ -14,7 +17,7 @@ import { AIChatPanel } from './components/AIChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { BookmarkBar } from './components/BookmarkBar';
 import { applyTheme } from '../../src/lib/themes';
-import type { ComputedView, ChatAction } from '../../src/types';
+import type { ComputedView } from '../../src/types';
 
 export default function App() {
   const { tasks, activeTasks, deferredTasks, somedayTasks, addTask, completeTask, deferTask, updateTask } = useTasks();
@@ -24,6 +27,7 @@ export default function App() {
   const [chatOpen, setChatOpen] = useState(false);
   const [feedback, setFeedback] = useState<{ message: string } | null>(null);
   const greetedRef = useRef(false);
+  const migratedRef = useRef(false);
 
   useEffect(() => {
     const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -35,22 +39,44 @@ export default function App() {
     return () => mq.removeEventListener('change', handler);
   }, [settings.theme]);
 
+  // Run migrations once on mount
+  useEffect(() => {
+    if (!migratedRef.current) {
+      migratedRef.current = true;
+      runMigrations();
+    }
+  }, []);
+
   useEffect(() => {
     if (hasApiKey && tasks.length > 0) {
       TaskStorage.purgeCompleted();
       ChatStorage.purgeOld();
       const freshDay = isNewDay(BriefStorage.getLastDate());
       if (freshDay) {
+        // Day boundary maintenance
         ChatStorage.clearToday();
         ai.clearChat();
+        MemoryStorage.decayConfidence();
+        ClusterStorage.purgeArchived();
+
+        // Build yesterday's reflection
+        const previousView = ViewStorage.get();
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        const reflection = buildDailyReflection(tasks, previousView, yesterdayStr);
+        ReflectionStorage.save(reflection);
       }
-      ai.generateBrief(tasks, false, undefined, ChatStorage.getRecent(2)).then(async (view) => {
+
+      const snapshot = buildContextSnapshot(tasks, computedView, ChatStorage.getRecent(2), settings.userName);
+      ai.generateBrief(snapshot, false).then(async (view) => {
         if (!view) return;
         setComputedView(view);
         // Generate daily greeting on first fresh brief of the day
         if (!greetedRef.current && freshDay) {
           greetedRef.current = true;
-          const greeting = await ai.generateGreeting(tasks, view, ChatStorage.getRecent(2));
+          const greetingSnapshot = buildContextSnapshot(tasks, view, ChatStorage.getRecent(2), settings.userName);
+          const greeting = await ai.generateGreeting(greetingSnapshot);
           if (greeting) setChatOpen(true);
         }
       });
@@ -68,7 +94,9 @@ export default function App() {
   const clusters = computedView?.clusters ?? [];
 
   const handleSubmit = async (text: string) => {
-    const parsed = await ai.parseTask(text, tasks);
+    const snapshot = buildContextSnapshot(tasks, computedView, ChatStorage.getRecent(1), settings.userName);
+    const contextBlock = buildParserContext(snapshot);
+    const parsed = await ai.parseTask(text, contextBlock);
 
     if (parsed.action === 'complete') {
       const target = tasks.find((t) => t.id === parsed.targetTaskId);
@@ -78,10 +106,10 @@ export default function App() {
       }
       completeTask(target.id);
       setFeedback({ message: `${target.parsed.title} completed` });
-      // Recompute brief with updated task list
       if (hasApiKey) {
         const updatedTasks = tasks.map((t) => t.id === target.id ? { ...t, status: 'completed' as const, completedAt: new Date().toISOString() } : t);
-        ai.generateBrief(updatedTasks, true).then((view) => { if (view) setComputedView(view); });
+        const updatedSnapshot = buildContextSnapshot(updatedTasks, computedView, ChatStorage.getRecent(1), settings.userName);
+        ai.generateBrief(updatedSnapshot, true).then((view) => { if (view) setComputedView(view); });
       }
       return;
     }
@@ -94,53 +122,88 @@ export default function App() {
       }
       deferTask(target.id);
       setFeedback({ message: `defer ${target.parsed.title}: noted` });
-      // Recompute brief with updated task list
       if (hasApiKey) {
         const updatedTasks = tasks.map((t) => t.id === target.id ? { ...t, status: 'deferred' as const, deferrals: t.deferrals + 1 } : t);
-        ai.generateBrief(updatedTasks, true).then((view) => { if (view) setComputedView(view); });
+        const updatedSnapshot = buildContextSnapshot(updatedTasks, computedView, ChatStorage.getRecent(1), settings.userName);
+        ai.generateBrief(updatedSnapshot, true).then((view) => { if (view) setComputedView(view); });
       }
       return;
     }
 
     // Default: create
+    // Resolve cluster name to PersistentCluster ID
+    let clusterId: string | null = null;
+    if (parsed.cluster) {
+      const cluster = ClusterStorage.ensureCluster(parsed.cluster);
+      clusterId = cluster.id;
+    }
+
     const newTask = addTask({
       text,
       parsed: { title: parsed.title, deadline: parsed.deadline, tags: parsed.tags },
       importance: parsed.importance,
-      relationships: { blocks: parsed.blocks, blockedBy: parsed.blockedBy, cluster: parsed.cluster },
+      relationships: { blocks: parsed.blocks, blockedBy: parsed.blockedBy, clusterId },
+      estimatedEffort: parsed.estimatedEffort,
+      emotionalContext: parsed.emotionalContext,
     });
     setFeedback({ message: `${parsed.title} has been received` });
     if (hasApiKey && newTask) {
       const updatedTasks = [...tasks, newTask];
-      ai.generateBrief(updatedTasks, true).then((view) => { if (view) setComputedView(view); });
+      const updatedSnapshot = buildContextSnapshot(updatedTasks, computedView, ChatStorage.getRecent(1), settings.userName);
+      ai.generateBrief(updatedSnapshot, true).then((view) => { if (view) setComputedView(view); });
     }
   };
 
   const handleChat = async (message: string): Promise<{ response: string; actionSummary: string | null }> => {
-    const { response, recomputeContext, actions } = await ai.chat(message, tasks, computedView);
+    const snapshot = buildContextSnapshot(tasks, computedView, ChatStorage.getRecent(2), settings.userName);
+    const { response, recomputeContext, actions } = await ai.chat(message, snapshot);
+
+    // Parse [MEMORY] blocks from the response
+    const { memories } = parseMemoryBlocks(response);
+    for (const mem of memories) {
+      MemoryStorage.save({ type: mem.type, content: mem.content, source: 'chat', confidence: 0.7 });
+    }
 
     // Execute actions
     let currentTasks = tasks;
-    const counts = { created: 0, completed: 0, deferred: 0, updated: 0 };
+    const counts = { created: 0, completed: 0, deferred: 0, updated: 0, memoriesSaved: memories.length };
 
     for (const action of actions) {
       if (action.action === 'create') {
+        // Resolve cluster ID
+        let actionClusterId: string | null = null;
+        if (action.clusterId) {
+          actionClusterId = action.clusterId;
+        }
+
         const newTask = addTask({
           text: action.title,
           parsed: { title: action.title, deadline: action.deadline ?? null, tags: action.tags ?? [] },
           importance: action.importance,
-          relationships: { blocks: [], blockedBy: [], cluster: null },
+          relationships: { blocks: [], blockedBy: [], clusterId: actionClusterId },
+          estimatedEffort: action.estimatedEffort ?? null,
+          emotionalContext: action.emotionalContext ?? null,
         });
         if (newTask) {
           currentTasks = [...currentTasks, newTask];
           counts.created++;
         }
+      } else if (action.action === 'save_memory') {
+        MemoryStorage.save({ type: action.type, content: action.content, source: 'chat', confidence: 0.7 });
+        counts.memoriesSaved++;
       } else if (action.action === 'complete') {
         const target = currentTasks.find((t) => t.id === action.targetTaskId);
         if (target) {
           completeTask(target.id);
           currentTasks = currentTasks.map((t) => t.id === target.id ? { ...t, status: 'completed' as const, completedAt: new Date().toISOString() } : t);
           counts.completed++;
+
+          // Auto-archive clusters when all tasks complete
+          if (target.relationships.clusterId) {
+            const clusterTasks = currentTasks.filter((t) => t.relationships.clusterId === target.relationships.clusterId);
+            const allDone = clusterTasks.every((t) => t.status === 'completed');
+            if (allDone) ClusterStorage.archive(target.relationships.clusterId);
+          }
         }
       } else if (action.action === 'defer') {
         const target = currentTasks.find((t) => t.id === action.targetTaskId);
@@ -170,20 +233,20 @@ export default function App() {
 
     // Build action summary string
     let actionSummary: string | null = null;
-    if (actions.length > 0) {
-      const parts: string[] = [];
-      if (counts.created) parts.push(`${counts.created} task${counts.created > 1 ? 's' : ''} added`);
-      if (counts.completed) parts.push(`${counts.completed} completed`);
-      if (counts.deferred) parts.push(`${counts.deferred} deferred`);
-      if (counts.updated) parts.push(`${counts.updated} updated`);
-      actionSummary = parts.join(', ');
-    }
+    const summaryParts: string[] = [];
+    if (counts.created) summaryParts.push(`${counts.created} task${counts.created > 1 ? 's' : ''} added`);
+    if (counts.completed) summaryParts.push(`${counts.completed} completed`);
+    if (counts.deferred) summaryParts.push(`${counts.deferred} deferred`);
+    if (counts.updated) summaryParts.push(`${counts.updated} updated`);
+    if (counts.memoriesSaved) summaryParts.push(`${counts.memoriesSaved} memory saved`);
+    if (summaryParts.length > 0) actionSummary = summaryParts.join(', ');
 
     // Recompute brief if actions were taken or recompute was requested
-    const shouldRecompute = actions.length > 0 || recomputeContext;
+    const shouldRecompute = actions.length > 0 || recomputeContext || memories.length > 0;
     if (shouldRecompute && hasApiKey) {
       const briefContext = [recomputeContext, actionSummary].filter(Boolean).join('; ') || undefined;
-      ai.generateBrief(currentTasks, true, briefContext).then((view) => { if (view) setComputedView(view); });
+      const updatedSnapshot = buildContextSnapshot(currentTasks, computedView, ChatStorage.getRecent(2), settings.userName);
+      ai.generateBrief(updatedSnapshot, true, briefContext).then((view) => { if (view) setComputedView(view); });
     }
 
     return { response, actionSummary };

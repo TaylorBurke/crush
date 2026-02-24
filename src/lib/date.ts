@@ -40,3 +40,14 @@ export function daysAgo(isoDate: string): number {
   const diffMs = now.getTime() - then.getTime();
   return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 }
+
+export type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night';
+
+export function getTimeOfDayBucket(): TimeOfDay {
+  const hour = new Date().getHours();
+  if (hour < ROLLOVER_HOUR) return 'night';
+  if (hour < 12) return 'morning';
+  if (hour < 17) return 'afternoon';
+  if (hour < 21) return 'evening';
+  return 'night';
+}

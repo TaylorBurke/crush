@@ -1,4 +1,4 @@
-import type { Task } from '../../../src/types';
+import type { Task, EffortLevel, EmotionalContext } from '../../../src/types';
 
 interface TaskCardProps {
   task: Task;
@@ -21,19 +21,49 @@ function isPastDue(deadline: string | null): boolean {
   return deadline < todayStr;
 }
 
+function effortIcon(effort: EffortLevel): string {
+  switch (effort) {
+    case 'quick': return '\u26A1'; // lightning
+    case 'deep': return '\u23F3'; // hourglass
+    case 'draining': return '\uD83D\uDD0B'; // battery
+  }
+}
+
+function effortLabel(effort: EffortLevel): string {
+  switch (effort) {
+    case 'quick': return 'quick';
+    case 'deep': return 'deep work';
+    case 'draining': return 'draining';
+  }
+}
+
+function emotionTintClass(emotion: EmotionalContext): string {
+  switch (emotion) {
+    case 'excited': return 'border-l-green-400/50';
+    case 'dreading': return 'border-l-orange-400/50';
+    case 'neutral': return '';
+  }
+}
+
 export function TaskCard({ task, nudge, onComplete, onDefer, variant = 'card' }: TaskCardProps) {
   const blockCount = task.relationships.blocks.length;
   const pastDue = isPastDue(task.parsed.deadline);
+  const emotionClass = task.emotionalContext ? emotionTintClass(task.emotionalContext) : '';
 
   if (variant === 'row') {
     return (
-      <div className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-surface-hover">
+      <div className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-surface-hover ${emotionClass ? `border-l-2 ${emotionClass}` : ''}`}>
         <button
           onClick={() => onComplete(task.id)}
           aria-label="complete"
           className="h-5 w-5 shrink-0 rounded-full border-2 border-check-border transition-colors hover:border-check-hover-border hover:bg-check-hover-bg"
         />
         <span className="flex-1 text-sm text-text-primary">{task.parsed.title}</span>
+        {task.estimatedEffort && (
+          <span className="text-xs text-text-muted opacity-60" title={effortLabel(task.estimatedEffort)}>
+            {effortIcon(task.estimatedEffort)}
+          </span>
+        )}
         {task.deferrals > 0 && (
           <span className="text-xs text-text-muted">deferred {task.deferrals}x</span>
         )}
@@ -49,14 +79,21 @@ export function TaskCard({ task, nudge, onComplete, onDefer, variant = 'card' }:
   }
 
   return (
-    <div className="relative flex flex-col justify-between rounded-2xl border border-border bg-surface p-5 shadow-sm transition-shadow hover:shadow-md">
+    <div className={`relative flex flex-col justify-between rounded-2xl border border-border bg-surface p-5 shadow-sm transition-shadow hover:shadow-md ${emotionClass ? `border-l-2 ${emotionClass}` : ''}`}>
       {pastDue && (
         <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">
           !
         </span>
       )}
       <div>
-        <h3 className="text-sm font-medium text-text-primary">{task.parsed.title}</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-medium text-text-primary">{task.parsed.title}</h3>
+          {task.estimatedEffort && (
+            <span className="text-xs text-text-muted opacity-60" title={effortLabel(task.estimatedEffort)}>
+              {effortIcon(task.estimatedEffort)}
+            </span>
+          )}
+        </div>
         <div className="mt-2 flex flex-wrap gap-2">
           {task.parsed.deadline && (
             <span className="text-xs text-text-muted">{formatDeadline(task.parsed.deadline)}</span>

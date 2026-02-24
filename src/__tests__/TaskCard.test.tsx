@@ -9,12 +9,15 @@ const mockTask: Task = {
   text: 'finish API docs by friday',
   parsed: { title: 'Finish API docs', deadline: '2026-02-27', tags: ['work'] },
   importance: 'high',
-  relationships: { blocks: ['task-2', 'task-3'], blockedBy: [], cluster: null },
+  relationships: { blocks: ['task-2', 'task-3'], blockedBy: [], clusterId: null },
   status: 'active',
   deferrals: 0,
   createdAt: '2026-02-21T10:00:00Z',
   completedAt: null,
   lastSurfacedAt: null,
+  estimatedEffort: null,
+  emotionalContext: null,
+  creationContext: null,
 };
 
 describe('TaskCard', () => {

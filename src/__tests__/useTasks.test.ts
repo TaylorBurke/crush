@@ -19,7 +19,7 @@ describe('useTasks', () => {
         text: 'test task',
         parsed: { title: 'Test Task', deadline: null, tags: [] },
         importance: 'medium',
-        relationships: { blocks: [], blockedBy: [], cluster: null },
+        relationships: { blocks: [], blockedBy: [], clusterId: null },
       });
     });
     expect(result.current.tasks).toHaveLength(1);
@@ -34,7 +34,7 @@ describe('useTasks', () => {
         text: 'do it',
         parsed: { title: 'Do It', deadline: null, tags: [] },
         importance: 'low',
-        relationships: { blocks: [], blockedBy: [], cluster: null },
+        relationships: { blocks: [], blockedBy: [], clusterId: null },
       });
     });
     const id = result.current.tasks[0].id;
@@ -52,7 +52,7 @@ describe('useTasks', () => {
         text: 'later',
         parsed: { title: 'Later', deadline: null, tags: [] },
         importance: 'low',
-        relationships: { blocks: [], blockedBy: [], cluster: null },
+        relationships: { blocks: [], blockedBy: [], clusterId: null },
       });
     });
     const id = result.current.tasks[0].id;
@@ -70,7 +70,7 @@ describe('useTasks', () => {
         text: 'maybe',
         parsed: { title: 'Maybe', deadline: null, tags: [] },
         importance: 'low',
-        relationships: { blocks: [], blockedBy: [], cluster: null },
+        relationships: { blocks: [], blockedBy: [], clusterId: null },
       });
     });
     const id = result.current.tasks[0].id;
@@ -87,7 +87,7 @@ describe('useTasks', () => {
         text: 'delete me',
         parsed: { title: 'Delete Me', deadline: null, tags: [] },
         importance: 'low',
-        relationships: { blocks: [], blockedBy: [], cluster: null },
+        relationships: { blocks: [], blockedBy: [], clusterId: null },
       });
     });
     const id = result.current.tasks[0].id;
@@ -104,7 +104,7 @@ describe('useTasks', () => {
         text: 'reactivate',
         parsed: { title: 'Reactivate', deadline: null, tags: [] },
         importance: 'medium',
-        relationships: { blocks: [], blockedBy: [], cluster: null },
+        relationships: { blocks: [], blockedBy: [], clusterId: null },
       });
     });
     const id = result.current.tasks[0].id;
@@ -120,13 +120,13 @@ describe('useTasks', () => {
         text: 'active',
         parsed: { title: 'Active', deadline: null, tags: [] },
         importance: 'medium',
-        relationships: { blocks: [], blockedBy: [], cluster: null },
+        relationships: { blocks: [], blockedBy: [], clusterId: null },
       });
       result.current.addTask({
         text: 'also active',
         parsed: { title: 'Also Active', deadline: null, tags: [] },
         importance: 'low',
-        relationships: { blocks: [], blockedBy: [], cluster: null },
+        relationships: { blocks: [], blockedBy: [], clusterId: null },
       });
     });
     const id = result.current.tasks[0].id;

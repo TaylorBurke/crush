@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
-import { TaskStorage } from '../lib/storage';
-import type { Task, Importance } from '../types';
+import { TaskStorage, ProfileStorage } from '../lib/storage';
+import { today, getTimeOfDayBucket } from '../lib/date';
+import type { Task, Importance, EffortLevel, EmotionalContext, TimeOfDay } from '../types';
 
 interface NewTaskInput {
   text: string;
@@ -13,8 +14,11 @@ interface NewTaskInput {
   relationships: {
     blocks: string[];
     blockedBy: string[];
-    cluster: string | null;
+    clusterId: string | null;
   };
+  estimatedEffort?: EffortLevel | null;
+  emotionalContext?: EmotionalContext | null;
+  creationContext?: TimeOfDay | null;
 }
 
 export function useTasks() {
@@ -36,8 +40,12 @@ export function useTasks() {
       createdAt: new Date().toISOString(),
       completedAt: null,
       lastSurfacedAt: null,
+      estimatedEffort: input.estimatedEffort ?? null,
+      emotionalContext: input.emotionalContext ?? null,
+      creationContext: input.creationContext ?? null,
     };
     TaskStorage.save(task);
+    ProfileStorage.recordCreation(getTimeOfDayBucket());
     refresh();
     return task;
   }, [refresh]);
@@ -51,12 +59,14 @@ export function useTasks() {
 
   const completeTask = useCallback((id: string) => {
     updateTask(id, { status: 'completed', completedAt: new Date().toISOString() });
+    ProfileStorage.recordCompletion(today(), getTimeOfDayBucket());
   }, [updateTask]);
 
   const deferTask = useCallback((id: string) => {
     const existing = TaskStorage.getById(id);
     if (!existing) return;
     updateTask(id, { status: 'deferred', deferrals: existing.deferrals + 1 });
+    ProfileStorage.recordDeferral(today(), getTimeOfDayBucket());
   }, [updateTask]);
 
   const somedayTask = useCallback((id: string) => {

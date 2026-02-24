@@ -15,7 +15,7 @@ describe('chat-actions', () => {
       const { cleaned, actions } = parseActionsBlock(raw);
       expect(cleaned).toBe('got it, adding that now!');
       expect(actions).toHaveLength(1);
-      expect(actions[0]).toEqual({ action: 'create', title: 'Buy groceries', importance: 'medium', deadline: null, tags: ['errands'] });
+      expect(actions[0]).toEqual({ action: 'create', title: 'Buy groceries', importance: 'medium', deadline: null, tags: ['errands'], estimatedEffort: null, emotionalContext: null, clusterId: null });
     });
 
     it('extracts complete action', () => {

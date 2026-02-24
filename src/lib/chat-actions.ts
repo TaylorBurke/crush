@@ -1,8 +1,11 @@
-import type { ChatAction, Importance } from '../types';
+import type { ChatAction, Importance, EffortLevel, EmotionalContext } from '../types';
 
 const ACTIONS_REGEX = /\[ACTIONS\]\s*([\s\S]*?)\s*\[\/ACTIONS\]/;
-const VALID_ACTIONS = ['create', 'complete', 'defer', 'update_importance', 'update_dependencies'] as const;
+const VALID_ACTIONS = ['create', 'complete', 'defer', 'update_importance', 'update_dependencies', 'save_memory'] as const;
 const VALID_IMPORTANCE = ['high', 'medium', 'low'] as const;
+const VALID_EFFORT: EffortLevel[] = ['quick', 'deep', 'draining'];
+const VALID_EMOTION: EmotionalContext[] = ['excited', 'dreading', 'neutral'];
+const VALID_MEMORY_TYPES = ['observation', 'rule'] as const;
 
 export function parseActionsBlock(rawResponse: string): { cleaned: string; actions: ChatAction[] } {
   const match = rawResponse.match(ACTIONS_REGEX);
@@ -31,7 +34,10 @@ export function parseActionsBlock(rawResponse: string): { cleaned: string; actio
           const importance: Importance = VALID_IMPORTANCE.includes(item.importance as Importance) ? item.importance as Importance : 'medium';
           const deadline = typeof item.deadline === 'string' ? item.deadline : null;
           const tags = Array.isArray(item.tags) ? item.tags.filter((t: unknown) => typeof t === 'string') : [];
-          return { action, title, deadline, importance, tags } as ChatAction;
+          const estimatedEffort = VALID_EFFORT.includes(item.estimatedEffort as EffortLevel) ? item.estimatedEffort as EffortLevel : null;
+          const emotionalContext = VALID_EMOTION.includes(item.emotionalContext as EmotionalContext) ? item.emotionalContext as EmotionalContext : null;
+          const clusterId = typeof item.clusterId === 'string' ? item.clusterId : null;
+          return { action, title, deadline, importance, tags, estimatedEffort, emotionalContext, clusterId } as ChatAction;
         }
 
         if (action === 'complete' || action === 'defer') {
@@ -53,6 +59,13 @@ export function parseActionsBlock(rawResponse: string): { cleaned: string; actio
           const blocks = Array.isArray(item.blocks) ? item.blocks.filter((id: unknown) => typeof id === 'string') : [];
           const blockedBy = Array.isArray(item.blockedBy) ? item.blockedBy.filter((id: unknown) => typeof id === 'string') : [];
           return { action, targetTaskId, blocks, blockedBy } as ChatAction;
+        }
+
+        if (action === 'save_memory') {
+          const content = typeof item.content === 'string' ? item.content : '';
+          if (!content) return null;
+          const type = VALID_MEMORY_TYPES.includes(item.type as typeof VALID_MEMORY_TYPES[number]) ? item.type as 'observation' | 'rule' : 'observation';
+          return { action, content, type } as ChatAction;
         }
 
         return null;

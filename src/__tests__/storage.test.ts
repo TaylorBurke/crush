@@ -8,12 +8,15 @@ function makeTask(overrides: Partial<Task> = {}): Task {
     text: 'test task',
     parsed: { title: 'Test Task', deadline: null, tags: [] },
     importance: 'medium',
-    relationships: { blocks: [], blockedBy: [], cluster: null },
+    relationships: { blocks: [], blockedBy: [], clusterId: null },
     status: 'active',
     deferrals: 0,
     createdAt: '2026-02-21T10:00:00Z',
     completedAt: null,
     lastSurfacedAt: null,
+    estimatedEffort: null,
+    emotionalContext: null,
+    creationContext: null,
     ...overrides,
   };
 }

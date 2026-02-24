@@ -1,8 +1,8 @@
-import type { Task, ComputedView, ChatMessage } from '../types';
+import type { Task, ComputedView } from '../types';
 
 interface Message { role: 'system' | 'user'; content: string; }
 
-export function buildDailyBriefPrompt(tasks: Task[], chatContext?: string, recentChat?: ChatMessage[]): Message[] {
+export function buildDailyBriefPrompt(tasks: Task[], contextBlock?: string, chatContext?: string): Message[] {
   const today = new Date().toISOString().split('T')[0];
   const dayOfWeek = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
@@ -15,7 +15,9 @@ export function buildDailyBriefPrompt(tasks: Task[], chatContext?: string, recen
       t.deferrals > 0 ? `deferrals: ${t.deferrals}` : null,
       t.relationships.blocks.length > 0 ? `blocks: [${t.relationships.blocks.join(', ')}]` : null,
       t.relationships.blockedBy.length > 0 ? `blockedBy: [${t.relationships.blockedBy.join(', ')}]` : null,
-      t.relationships.cluster ? `cluster: ${t.relationships.cluster}` : null,
+      t.relationships.clusterId ? `clusterId: ${t.relationships.clusterId}` : null,
+      t.estimatedEffort ? `effort: ${t.estimatedEffort}` : null,
+      t.emotionalContext ? `emotion: ${t.emotionalContext}` : null,
       `created: ${t.createdAt.split('T')[0]}`,
     ].filter(Boolean);
     return parts.join(' | ');
@@ -51,9 +53,9 @@ Rules for urgencyScores (for all non-completed tasks):
 - If a task blocks an important task, it inherits urgency
 
 Rules for clusters:
-- Group by cluster field. Progress = completed / total in cluster${chatContext ? `\n\nIMPORTANT user context from conversation:\n${chatContext}\nFactor this into your prioritization and focus selection.` : ''}${recentChat && recentChat.length > 0 ? `\n\nRecent conversations (use these to understand the user's mindset and priorities):\n${recentChat.slice(-20).map((m) => `${m.role}: ${m.content}`).join('\n')}` : ''}`,
+- Group by cluster field. Progress = completed / total in cluster${chatContext ? `\n\nIMPORTANT user context from conversation:\n${chatContext}` : ''}`,
     },
-    { role: 'user', content: `Here are all my tasks:\n\n${taskSummary}` },
+    { role: 'user', content: `Here are all my tasks:\n\n${taskSummary}${contextBlock ? `\n\n--- Additional context ---\n${contextBlock}` : ''}` },
   ];
 }
 

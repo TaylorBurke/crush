@@ -15,13 +15,16 @@ describe('types', () => {
       relationships: {
         blocks: [],
         blockedBy: [],
-        cluster: null,
+        clusterId: null,
       },
       status: 'active',
       deferrals: 0,
       createdAt: '2026-02-21T10:00:00Z',
       completedAt: null,
       lastSurfacedAt: null,
+      estimatedEffort: null,
+      emotionalContext: null,
+      creationContext: null,
     };
     expect(task.id).toBe('test-1');
     expect(task.status).toBe('active');

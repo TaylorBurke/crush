@@ -1,4 +1,4 @@
-import type { Task, Importance, TaskAction } from '../types';
+import type { Task, Importance, TaskAction, EffortLevel, EmotionalContext } from '../types';
 
 interface ParsedTaskFields {
   title: string;
@@ -8,16 +8,18 @@ interface ParsedTaskFields {
   blocks: string[];
   blockedBy: string[];
   cluster: string | null;
+  estimatedEffort: EffortLevel | null;
+  emotionalContext: EmotionalContext | null;
   action: TaskAction;
   targetTaskId: string | null;
 }
 
 interface Message { role: 'system' | 'user'; content: string; }
 
-export function buildParsePrompt(rawText: string, existingTasks: Pick<Task, 'id' | 'parsed' | 'status'>[]): Message[] {
-  const taskList = existingTasks.length > 0
-    ? existingTasks.map((t) => `- [${t.id}] ${t.parsed.title} (${t.status})`).join('\n')
-    : '(none)';
+const VALID_EFFORT: EffortLevel[] = ['quick', 'deep', 'draining'];
+const VALID_EMOTION: EmotionalContext[] = ['excited', 'dreading', 'neutral'];
+
+export function buildParsePrompt(rawText: string, contextBlock: string): Message[] {
   const today = new Date().toISOString().split('T')[0];
 
   return [
@@ -25,6 +27,8 @@ export function buildParsePrompt(rawText: string, existingTasks: Pick<Task, 'id'
       role: 'system',
       content: `You are a task parser. Given raw text from a user, extract structured task data.
 Today's date is ${today}.
+
+${contextBlock}
 
 Respond with JSON only (no markdown, no explanation):
 {
@@ -36,7 +40,9 @@ Respond with JSON only (no markdown, no explanation):
   "tags": ["tag1", "tag2"],
   "blocks": ["task-id-1"],
   "blockedBy": ["task-id-2"],
-  "cluster": "thematic-group-name or null"
+  "cluster": "thematic-group-name or null",
+  "estimatedEffort": "quick" | "deep" | "draining" | null,
+  "emotionalContext": "excited" | "dreading" | "neutral" | null
 }
 
 Rules:
@@ -56,9 +62,11 @@ Rules:
   Pay close attention to hedging language, modal verbs, and tone. "I really need to" is stronger than "I need to" which is stronger than "I should probably". Default to medium only when there are no linguistic cues either way.
 - "tags": Infer 1-3 short tags from context.
 - "blocks"/"blockedBy": Match against existing tasks by semantic similarity. Only use IDs from the existing task list. Use empty arrays if no relationships detected.
-- "cluster": If this task relates thematically to existing tasks, suggest a cluster name. Otherwise null.`,
+- "cluster": Map to an existing cluster name when the task thematically fits. Otherwise suggest a new cluster name or null.
+- "estimatedEffort": Infer effort level — "quick" for simple/fast tasks (under 15 min), "deep" for focused work (1+ hours), "draining" for emotionally/mentally exhausting tasks. null if unclear.
+- "emotionalContext": Infer emotional tone — "excited" if the user sounds eager/enthusiastic, "dreading" if reluctant/anxious, "neutral" otherwise. null if unclear.`,
     },
-    { role: 'user', content: `Raw input: "${rawText}"\n\nExisting tasks:\n${taskList}` },
+    { role: 'user', content: rawText },
   ];
 }
 
@@ -81,10 +89,12 @@ export function parseAIResponse(responseText: string): ParsedTaskFields {
       blocks: Array.isArray(data.blocks) ? data.blocks : [],
       blockedBy: Array.isArray(data.blockedBy) ? data.blockedBy : [],
       cluster: data.cluster || null,
+      estimatedEffort: VALID_EFFORT.includes(data.estimatedEffort) ? data.estimatedEffort : null,
+      emotionalContext: VALID_EMOTION.includes(data.emotionalContext) ? data.emotionalContext : null,
       action: finalAction,
       targetTaskId: finalAction === 'create' ? null : targetTaskId,
     };
   } catch {
-    return { title: responseText, deadline: null, importance: 'medium', tags: [], blocks: [], blockedBy: [], cluster: null, action: 'create', targetTaskId: null };
+    return { title: responseText, deadline: null, importance: 'medium', tags: [], blocks: [], blockedBy: [], cluster: null, estimatedEffort: null, emotionalContext: null, action: 'create', targetTaskId: null };
   }
 }

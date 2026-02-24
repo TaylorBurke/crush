@@ -1,13 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { buildDailyBriefPrompt, parseBriefResponse } from '../lib/daily-brief';
-import type { Task, ChatMessage } from '../types';
+import type { Task } from '../types';
 
 function makeTask(overrides: Partial<Task> = {}): Task {
   return {
     id: 'test-1', text: 'test', parsed: { title: 'Test', deadline: null, tags: [] },
-    importance: 'medium', relationships: { blocks: [], blockedBy: [], cluster: null },
+    importance: 'medium', relationships: { blocks: [], blockedBy: [], clusterId: null },
     status: 'active', deferrals: 0, createdAt: '2026-02-21T10:00:00Z',
-    completedAt: null, lastSurfacedAt: null, ...overrides,
+    completedAt: null, lastSurfacedAt: null,
+    estimatedEffort: null, emotionalContext: null, creationContext: null, ...overrides,
   };
 }
 
@@ -46,12 +47,12 @@ describe('daily-brief', () => {
     });
 
     it('includes blocking relationships', () => {
-      const tasks = [makeTask({ relationships: { blocks: ['t2'], blockedBy: ['t0'], cluster: 'proj' } })];
+      const tasks = [makeTask({ relationships: { blocks: ['t2'], blockedBy: ['t0'], clusterId: 'cluster-1' } })];
       const messages = buildDailyBriefPrompt(tasks);
       const userMsg = messages.find((m) => m.role === 'user');
       expect(userMsg?.content).toContain('blocks: [t2]');
       expect(userMsg?.content).toContain('blockedBy: [t0]');
-      expect(userMsg?.content).toContain('cluster: proj');
+      expect(userMsg?.content).toContain('clusterId: cluster-1');
     });
 
     it('includes today date and day of week in system message', () => {
@@ -62,37 +63,26 @@ describe('daily-brief', () => {
       expect(sysMsg?.content).toContain(today);
     });
 
-    it('includes recent chat context when provided', () => {
+    it('includes context block when provided', () => {
       const tasks = [makeTask()];
-      const recentChat: ChatMessage[] = [
-        { role: 'user', content: 'I want to focus on design this week', timestamp: '2026-02-22T14:00:00Z' },
-        { role: 'assistant', content: 'Got it, shifting focus to design tasks.', timestamp: '2026-02-22T14:00:05Z' },
-      ];
-      const messages = buildDailyBriefPrompt(tasks, undefined, recentChat);
-      const sysMsg = messages.find((m) => m.role === 'system');
-      expect(sysMsg?.content).toContain('Recent conversations');
-      expect(sysMsg?.content).toContain('I want to focus on design this week');
+      const contextBlock = 'Recent chat:\nuser: I want to focus on design this week\nassistant: Got it, shifting focus to design tasks.';
+      const messages = buildDailyBriefPrompt(tasks, contextBlock);
+      const userMsg = messages.find((m) => m.role === 'user');
+      expect(userMsg?.content).toContain('I want to focus on design this week');
     });
 
-    it('omits recent chat section when recentChat is empty', () => {
+    it('omits context section when contextBlock is empty', () => {
       const tasks = [makeTask()];
-      const messages = buildDailyBriefPrompt(tasks, undefined, []);
-      const sysMsg = messages.find((m) => m.role === 'system');
-      expect(sysMsg?.content).not.toContain('Recent conversations');
+      const messages = buildDailyBriefPrompt(tasks, '');
+      const userMsg = messages.find((m) => m.role === 'user');
+      expect(userMsg?.content).not.toContain('Additional context');
     });
 
-    it('truncates recent chat to last 20 messages', () => {
+    it('includes chat context in system message when provided', () => {
       const tasks = [makeTask()];
-      const recentChat: ChatMessage[] = Array.from({ length: 30 }, (_, i) => ({
-        role: 'user' as const,
-        content: `message ${i}`,
-        timestamp: '2026-02-23T10:00:00Z',
-      }));
-      const messages = buildDailyBriefPrompt(tasks, undefined, recentChat);
+      const messages = buildDailyBriefPrompt(tasks, undefined, 'user wants to focus on design');
       const sysMsg = messages.find((m) => m.role === 'system');
-      expect(sysMsg?.content).toContain('message 10');
-      expect(sysMsg?.content).toContain('message 29');
-      expect(sysMsg?.content).not.toContain('message 9');
+      expect(sysMsg?.content).toContain('user wants to focus on design');
     });
   });
 
