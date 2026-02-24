@@ -223,7 +223,7 @@ export default function App() {
       {!chatOpen && settings.bookmarks.length > 0 && (
         <button
           onClick={() => updateSettings({ showBookmarks: !settings.showBookmarks })}
-          className={`fixed bottom-[5.125rem] left-4 z-30 flex w-12 items-center justify-center rounded-full p-1 text-text-muted transition-all ${settings.showBookmarks ? '' : 'opacity-0 hover:opacity-100 focus:opacity-100'}`}
+          className={`fixed bottom-[5.125rem] left-4 z-30 flex w-12 items-center justify-center rounded-full p-1 text-text-muted transition-all ${settings.showBookmarks ? 'opacity-40 hover:opacity-100' : 'opacity-0 hover:opacity-100 focus:opacity-100'}`}
           aria-label={settings.showBookmarks ? 'hide bookmarks' : 'show bookmarks'}
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
