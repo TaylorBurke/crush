@@ -2,7 +2,7 @@
 
 **AI-powered task intelligence for your new tab -- crush the day.**
 
-Crush is a Chrome extension that replaces your new tab page with a focused, AI-driven task management system. Instead of forcing you into rigid lists and categories, Crush uses OpenAI to silently parse your natural language, infer priorities from how you phrase things, detect relationships between tasks, and surface what matters most each day.
+Crush is a Chrome extension that replaces your new tab page with a focused, AI-driven task management system. Instead of forcing you into rigid lists and categories, Crush uses AI (OpenAI or OpenRouter) to silently parse your natural language, infer priorities from how you phrase things, detect relationships between tasks, and surface what matters most each day.
 
 Built for creative professionals with chaotic, interrelated workloads where tasks are half-formed, context-dependent, and constantly shifting.
 
@@ -47,7 +47,7 @@ crush/
 │   │   ├── useAI.ts                # AI orchestration (parse, brief, chat)
 │   │   └── useSettings.ts          # Settings with chrome.storage.local
 │   ├── lib/
-│   │   ├── ai-client.ts            # OpenAI API wrapper
+│   │   ├── ai-client.ts            # OpenAI / OpenRouter API wrapper
 │   │   ├── task-parser.ts          # Parse prompt construction + response handling
 │   │   ├── daily-brief.ts          # Daily brief prompt + response handling
 │   │   ├── date.ts                 # Date utilities (4 AM rollover, greeting)
@@ -84,15 +84,17 @@ The ComputedView recalculates when:
 
 ### AI integration
 
-Three touchpoints, all using OpenAI GPT-4o-mini:
+Three touchpoints, using your chosen provider (OpenAI or OpenRouter) and model (defaults to GPT-4o-mini):
 
-| Feature | Trigger | Cost estimate |
+| Feature | Trigger | Cost estimate (GPT-4o-mini) |
 |---------|---------|---------------|
 | Task parser | Every new task | ~$0.001/task |
 | Daily brief | First tab open of the day | ~$0.005/brief |
 | Chat advisor | On demand | ~$0.002/message |
 
-The AI key is stored in `chrome.storage.local` (not localStorage) for better security isolation. All AI calls are made directly from the extension -- there is no backend server.
+Cost varies by provider and model. OpenRouter gives access to models from Anthropic, Google, Meta, and others.
+
+The API key is stored in `chrome.storage.local` (not localStorage) for better security isolation. All AI calls are made directly from the extension -- there is no backend server.
 
 ### Theme system
 
@@ -111,7 +113,7 @@ Theme switching is automatic via `prefers-color-scheme`. All components use sema
 | UI | React | 19.x |
 | Language | TypeScript | 5.9.x |
 | Styling | Tailwind CSS | 4.x |
-| AI | OpenAI GPT-4o-mini | -- |
+| AI | OpenAI / OpenRouter (default: GPT-4o-mini) | -- |
 | Testing | Vitest + React Testing Library | 4.x |
 | Build | Vite (via WXT) | -- |
 | Manifest | Chrome MV3 | 3 |
@@ -122,7 +124,7 @@ Theme switching is automatic via `prefers-color-scheme`. All components use sema
 
 - Node.js 18+
 - npm
-- An OpenAI API key (for AI features; the app works without one but with reduced functionality)
+- An API key from OpenAI or OpenRouter (for AI features; the app works without one but with reduced functionality)
 
 ### Setup
 
@@ -213,14 +215,14 @@ After initial publication, push updates by incrementing the `version` in `wxt.co
 
 ### API key handling
 
-- The OpenAI API key is stored in `chrome.storage.local`, which is isolated to the extension's origin and not accessible to web pages.
+- The API key is stored in `chrome.storage.local`, which is isolated to the extension's origin and not accessible to web pages.
 - The key is never written to localStorage, included in URLs, or logged.
-- API calls go directly to `api.openai.com` over HTTPS. There is no intermediary server.
+- API calls go directly to your provider (`api.openai.com` or `openrouter.ai/api`) over HTTPS. There is no intermediary server.
 
 ### Data privacy
 
-- **All task data stays local.** Tasks are stored in the browser's localStorage. Nothing is sent to any server except the OpenAI API for parsing and analysis.
-- **What is sent to OpenAI**: Task titles, statuses, importance levels, deadlines, and relationship data -- only when AI features are triggered. Raw user input text is sent for parsing.
+- **All task data stays local.** Tasks are stored in the browser's localStorage. Nothing is sent to any server except your chosen AI provider for parsing and analysis.
+- **What is sent to the AI provider**: Task titles, statuses, importance levels, deadlines, and relationship data -- only when AI features are triggered. Raw user input text is sent for parsing.
 - **What is NOT sent**: No browsing history, no personal information beyond what the user types into the task input, no telemetry.
 
 ### Extension permissions
