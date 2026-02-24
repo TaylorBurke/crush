@@ -13,17 +13,19 @@ function BookmarkIcon({ icon }: { icon: string }) {
 
 export function BookmarkBar({ bookmarks }: BookmarkBarProps) {
   return (
-    <div className="fixed bottom-16 left-4 z-30 flex flex-col items-center gap-3">
-      {bookmarks.map((bm) => (
-        <a
-          key={bm.id}
-          href={bm.url}
-          title={bm.label}
-          className="flex h-10 w-10 items-center justify-center rounded-full opacity-40 transition-all hover:scale-110 hover:opacity-100"
-        >
-          <BookmarkIcon icon={bm.icon} />
-        </a>
-      ))}
+    <div className="fixed bottom-20 left-4 z-30">
+      <div className="flex flex-col items-center gap-1.5 rounded-full bg-surface-hover/70 px-1.5 py-2 backdrop-blur-sm">
+        {bookmarks.map((bm) => (
+          <a
+            key={bm.id}
+            href={bm.url}
+            title={bm.label}
+            className="flex h-10 w-10 items-center justify-center rounded-full opacity-40 transition-all hover:scale-110 hover:opacity-100"
+          >
+            <BookmarkIcon icon={bm.icon} />
+          </a>
+        ))}
+      </div>
     </div>
   );
 }
