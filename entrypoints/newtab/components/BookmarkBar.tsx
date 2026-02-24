@@ -13,7 +13,7 @@ function BookmarkIcon({ icon }: { icon: string }) {
 
 export function BookmarkBar({ bookmarks }: BookmarkBarProps) {
   return (
-    <div className="fixed bottom-20 left-4 z-30">
+    <div className="fixed bottom-[6.25rem] left-4 z-30">
       <div className="flex flex-col items-center gap-1.5 rounded-full bg-surface-hover/70 px-2 py-2 backdrop-blur-sm">
         {bookmarks.map((bm) => (
           <a
