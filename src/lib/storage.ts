@@ -1,4 +1,4 @@
-import type { Task, ComputedView } from '../types';
+import type { Task, ComputedView, ChatMessage } from '../types';
 
 const TASKS_KEY = 'crush-tasks';
 const VIEW_KEY = 'crush-computed-view';
@@ -78,5 +78,60 @@ export const BriefStorage = {
 
   setLastDate(date: string): void {
     localStorage.setItem(LAST_BRIEF_KEY, date);
+  },
+};
+
+const CHAT_KEY_PREFIX = 'crush-chat-';
+
+function chatKeyForDate(date: Date): string {
+  return CHAT_KEY_PREFIX + date.toISOString().split('T')[0];
+}
+
+export const ChatStorage = {
+  getToday(): ChatMessage[] {
+    const key = chatKeyForDate(new Date());
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    try { return JSON.parse(raw) as ChatMessage[]; }
+    catch { return []; }
+  },
+
+  getRecent(days: number): ChatMessage[] {
+    const messages: ChatMessage[] = [];
+    const now = new Date();
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = chatKeyForDate(d);
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        try { messages.push(...(JSON.parse(raw) as ChatMessage[])); }
+        catch { /* skip corrupt entries */ }
+      }
+    }
+    return messages;
+  },
+
+  saveMessage(msg: ChatMessage): void {
+    const key = chatKeyForDate(new Date());
+    const existing = this.getToday();
+    existing.push(msg);
+    localStorage.setItem(key, JSON.stringify(existing));
+  },
+
+  purgeOld(): void {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 7);
+    const cutoffStr = cutoff.toISOString().split('T')[0];
+
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(CHAT_KEY_PREFIX)) {
+        const dateStr = key.slice(CHAT_KEY_PREFIX.length);
+        if (dateStr < cutoffStr) {
+          localStorage.removeItem(key);
+        }
+      }
+    }
   },
 };
