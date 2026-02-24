@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Settings } from '../types';
 
 const SETTINGS_KEY = 'crush-settings';
@@ -45,7 +45,7 @@ declare const chrome: {
   };
 } | undefined;
 
-function getStorage() {
+function createStorage() {
   if (typeof chrome !== 'undefined' && chrome?.storage?.local) {
     return {
       async get(): Promise<Settings> {
@@ -76,10 +76,10 @@ function getStorage() {
 export function useSettings() {
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [loaded, setLoaded] = useState(false);
-  const storage = getStorage();
+  const storageRef = useRef(createStorage());
 
   useEffect(() => {
-    storage.get().then((s) => {
+    storageRef.current.get().then((s) => {
       setSettings(s);
       setLoaded(true);
     });
@@ -88,10 +88,10 @@ export function useSettings() {
   const updateSettings = useCallback((updates: Partial<Settings>) => {
     setSettings(prev => {
       const next = { ...prev, ...updates };
-      storage.set(next);
+      storageRef.current.set(next);
       return next;
     });
-  }, [storage]);
+  }, []);
 
   const hasApiKey = Boolean(settings.apiKey);
 
