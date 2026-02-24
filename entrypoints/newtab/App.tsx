@@ -220,6 +220,22 @@ export default function App() {
         <BookmarkBar bookmarks={settings.bookmarks} />
       )}
 
+      {!chatOpen && settings.bookmarks.length > 0 && (
+        <button
+          onClick={() => updateSettings({ showBookmarks: !settings.showBookmarks })}
+          className="fixed bottom-[3.25rem] left-[1.15rem] z-30 rounded-full p-1 text-text-muted opacity-0 transition-all hover:opacity-100 focus:opacity-100"
+          aria-label={settings.showBookmarks ? 'hide bookmarks' : 'show bookmarks'}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+            {settings.showBookmarks ? (
+              <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+            ) : (
+              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+            )}
+          </svg>
+        </button>
+      )}
+
       <AIChatPanel open={chatOpen} onClose={() => setChatOpen(false)} onSend={handleChat} messages={ai.chatHistory} isLoading={ai.isChatting} />
 
       {hasApiKey && !chatOpen && (
