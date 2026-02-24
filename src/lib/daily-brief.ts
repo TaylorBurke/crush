@@ -1,8 +1,8 @@
-import type { Task, ComputedView } from '../types';
+import type { Task, ComputedView, ChatMessage } from '../types';
 
 interface Message { role: 'system' | 'user'; content: string; }
 
-export function buildDailyBriefPrompt(tasks: Task[], chatContext?: string): Message[] {
+export function buildDailyBriefPrompt(tasks: Task[], chatContext?: string, recentChat?: ChatMessage[]): Message[] {
   const today = new Date().toISOString().split('T')[0];
   const dayOfWeek = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
@@ -51,7 +51,7 @@ Rules for urgencyScores (for all non-completed tasks):
 - If a task blocks an important task, it inherits urgency
 
 Rules for clusters:
-- Group by cluster field. Progress = completed / total in cluster${chatContext ? `\n\nIMPORTANT user context from conversation:\n${chatContext}\nFactor this into your prioritization and focus selection.` : ''}`,
+- Group by cluster field. Progress = completed / total in cluster${chatContext ? `\n\nIMPORTANT user context from conversation:\n${chatContext}\nFactor this into your prioritization and focus selection.` : ''}${recentChat && recentChat.length > 0 ? `\n\nRecent conversations (use these to understand the user's mindset and priorities):\n${recentChat.slice(-20).map((m) => `${m.role}: ${m.content}`).join('\n')}` : ''}`,
     },
     { role: 'user', content: `Here are all my tasks:\n\n${taskSummary}` },
   ];

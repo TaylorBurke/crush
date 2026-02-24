@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildDailyBriefPrompt, parseBriefResponse } from '../lib/daily-brief';
-import type { Task } from '../types';
+import type { Task, ChatMessage } from '../types';
 
 function makeTask(overrides: Partial<Task> = {}): Task {
   return {
@@ -60,6 +60,39 @@ describe('daily-brief', () => {
       const sysMsg = messages.find((m) => m.role === 'system');
       const today = new Date().toISOString().split('T')[0];
       expect(sysMsg?.content).toContain(today);
+    });
+
+    it('includes recent chat context when provided', () => {
+      const tasks = [makeTask()];
+      const recentChat: ChatMessage[] = [
+        { role: 'user', content: 'I want to focus on design this week', timestamp: '2026-02-22T14:00:00Z' },
+        { role: 'assistant', content: 'Got it, shifting focus to design tasks.', timestamp: '2026-02-22T14:00:05Z' },
+      ];
+      const messages = buildDailyBriefPrompt(tasks, undefined, recentChat);
+      const sysMsg = messages.find((m) => m.role === 'system');
+      expect(sysMsg?.content).toContain('Recent conversations');
+      expect(sysMsg?.content).toContain('I want to focus on design this week');
+    });
+
+    it('omits recent chat section when recentChat is empty', () => {
+      const tasks = [makeTask()];
+      const messages = buildDailyBriefPrompt(tasks, undefined, []);
+      const sysMsg = messages.find((m) => m.role === 'system');
+      expect(sysMsg?.content).not.toContain('Recent conversations');
+    });
+
+    it('truncates recent chat to last 20 messages', () => {
+      const tasks = [makeTask()];
+      const recentChat: ChatMessage[] = Array.from({ length: 30 }, (_, i) => ({
+        role: 'user' as const,
+        content: `message ${i}`,
+        timestamp: '2026-02-23T10:00:00Z',
+      }));
+      const messages = buildDailyBriefPrompt(tasks, undefined, recentChat);
+      const sysMsg = messages.find((m) => m.role === 'system');
+      expect(sysMsg?.content).toContain('message 10');
+      expect(sysMsg?.content).toContain('message 29');
+      expect(sysMsg?.content).not.toContain('message 9');
     });
   });
 
