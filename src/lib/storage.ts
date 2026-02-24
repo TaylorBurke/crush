@@ -3,7 +3,7 @@ import { today, formatLocalDate } from './date';
 
 const TASKS_KEY = 'crush-tasks';
 const VIEW_KEY = 'crush-computed-view';
-const LAST_BRIEF_KEY = 'crush-last-brief-date';
+const LAST_BRIEF_KEY = 'crush-last-brief-date-v2';
 
 export const TaskStorage = {
   getAll(): Task[] {
@@ -116,6 +116,10 @@ export const ChatStorage = {
     const existing = this.getToday();
     existing.push(msg);
     localStorage.setItem(key, JSON.stringify(existing));
+  },
+
+  clearToday(): void {
+    localStorage.removeItem(CHAT_KEY_PREFIX + today());
   },
 
   purgeOld(): void {

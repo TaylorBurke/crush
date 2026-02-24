@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTasks } from '../../src/hooks/useTasks';
 import { useSettings } from '../../src/hooks/useSettings';
 import { useAI } from '../../src/hooks/useAI';
-import { ViewStorage, TaskStorage, ChatStorage } from '../../src/lib/storage';
+import { ViewStorage, TaskStorage, ChatStorage, BriefStorage } from '../../src/lib/storage';
+import { isNewDay } from '../../src/lib/date';
 import { Greeting } from './components/Greeting';
 import { SmartInput } from './components/SmartInput';
 import { FocusCards } from './components/FocusCards';
@@ -38,11 +39,16 @@ export default function App() {
     if (hasApiKey && tasks.length > 0) {
       TaskStorage.purgeCompleted();
       ChatStorage.purgeOld();
+      const freshDay = isNewDay(BriefStorage.getLastDate());
+      if (freshDay) {
+        ChatStorage.clearToday();
+        ai.clearChat();
+      }
       ai.generateBrief(tasks, false, undefined, ChatStorage.getRecent(2)).then(async (view) => {
         if (!view) return;
         setComputedView(view);
-        // Generate daily greeting on first fresh brief of the session
-        if (!greetedRef.current && ai.chatHistory.length === 0) {
+        // Generate daily greeting on first fresh brief of the day
+        if (!greetedRef.current && freshDay) {
           greetedRef.current = true;
           const greeting = await ai.generateGreeting(tasks, view, ChatStorage.getRecent(2));
           if (greeting) setChatOpen(true);
