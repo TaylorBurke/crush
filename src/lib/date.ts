@@ -1,11 +1,19 @@
 const ROLLOVER_HOUR = 4;
 
+/** Format a Date as YYYY-MM-DD using local timezone */
+export function formatLocalDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 export function today(): string {
   const now = new Date();
   if (now.getHours() < ROLLOVER_HOUR) {
     now.setDate(now.getDate() - 1);
   }
-  return now.toISOString().split('T')[0];
+  return formatLocalDate(now);
 }
 
 export function getGreeting(): string {

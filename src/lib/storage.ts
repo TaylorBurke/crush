@@ -1,4 +1,5 @@
 import type { Task, ComputedView, ChatMessage } from '../types';
+import { today, formatLocalDate } from './date';
 
 const TASKS_KEY = 'crush-tasks';
 const VIEW_KEY = 'crush-computed-view';
@@ -83,13 +84,9 @@ export const BriefStorage = {
 
 const CHAT_KEY_PREFIX = 'crush-chat-';
 
-function chatKeyForDate(date: Date): string {
-  return CHAT_KEY_PREFIX + date.toISOString().split('T')[0];
-}
-
 export const ChatStorage = {
   getToday(): ChatMessage[] {
-    const key = chatKeyForDate(new Date());
+    const key = CHAT_KEY_PREFIX + today();
     const raw = localStorage.getItem(key);
     if (!raw) return [];
     try { return JSON.parse(raw) as ChatMessage[]; }
@@ -98,11 +95,13 @@ export const ChatStorage = {
 
   getRecent(days: number): ChatMessage[] {
     const messages: ChatMessage[] = [];
-    const now = new Date();
+    // Parse today() back to a Date to iterate backwards from the rollover-adjusted day
+    const parts = today().split('-');
+    const base = new Date(+parts[0], +parts[1] - 1, +parts[2], 12);
     for (let i = days - 1; i >= 0; i--) {
-      const d = new Date(now);
+      const d = new Date(base);
       d.setDate(d.getDate() - i);
-      const key = chatKeyForDate(d);
+      const key = CHAT_KEY_PREFIX + formatLocalDate(d);
       const raw = localStorage.getItem(key);
       if (raw) {
         try { messages.push(...(JSON.parse(raw) as ChatMessage[])); }
@@ -113,7 +112,7 @@ export const ChatStorage = {
   },
 
   saveMessage(msg: ChatMessage): void {
-    const key = chatKeyForDate(new Date());
+    const key = CHAT_KEY_PREFIX + today();
     const existing = this.getToday();
     existing.push(msg);
     localStorage.setItem(key, JSON.stringify(existing));
@@ -122,7 +121,7 @@ export const ChatStorage = {
   purgeOld(): void {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - 7);
-    const cutoffStr = cutoff.toISOString().split('T')[0];
+    const cutoffStr = formatLocalDate(cutoff);
 
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const key = localStorage.key(i);
