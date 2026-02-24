@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { callLLM, PROVIDER_CONFIG } from '../lib/ai-client';
 import { buildParsePrompt, parseAIResponse } from '../lib/task-parser';
 import { buildDailyBriefPrompt, parseBriefResponse } from '../lib/daily-brief';
-import { ViewStorage, BriefStorage } from '../lib/storage';
+import { ViewStorage, BriefStorage, ChatStorage } from '../lib/storage';
 import { today, isNewDay } from '../lib/date';
 import { parseActionsBlock } from '../lib/chat-actions';
 import type { Task, ComputedView, ChatMessage, ChatResult, Provider } from '../types';
@@ -11,7 +11,7 @@ export function useAI(apiKey: string, provider: Provider, model: string) {
   const [parsing, setParsing] = useState(false);
   const [briefing, setBriefing] = useState(false);
   const [chatting, setChatting] = useState(false);
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>(() => ChatStorage.getToday());
 
   const parseTask = useCallback(async (rawText: string, existingTasks: Pick<Task, 'id' | 'parsed' | 'status'>[]) => {
     if (!apiKey) {
@@ -30,7 +30,7 @@ export function useAI(apiKey: string, provider: Provider, model: string) {
     }
   }, [apiKey]);
 
-  const generateBrief = useCallback(async (tasks: Task[], force = false, chatContext?: string): Promise<ComputedView | null> => {
+  const generateBrief = useCallback(async (tasks: Task[], force = false, chatContext?: string, recentChat?: ChatMessage[]): Promise<ComputedView | null> => {
     if (!apiKey) return null;
     if (!force) {
       const lastDate = BriefStorage.getLastDate();
@@ -40,7 +40,7 @@ export function useAI(apiKey: string, provider: Provider, model: string) {
     try {
       const nonCompleted = tasks.filter((t) => t.status !== 'completed');
       if (nonCompleted.length === 0) return null;
-      const messages = buildDailyBriefPrompt(tasks, chatContext);
+      const messages = buildDailyBriefPrompt(tasks, chatContext, recentChat);
       const response = await callLLM({ apiKey, provider, model, messages, responseFormat: { type: 'json_object' } });
       const view = parseBriefResponse(response);
       ViewStorage.save(view);
@@ -58,6 +58,7 @@ export function useAI(apiKey: string, provider: Provider, model: string) {
     setChatting(true);
     const newUserMsg: ChatMessage = { role: 'user', content: userMessage, timestamp: new Date().toISOString() };
     setChatHistory((prev) => [...prev, newUserMsg]);
+    ChatStorage.saveMessage(newUserMsg);
     try {
       const nonCompleted = tasks.filter((t) => t.status !== 'completed');
       const taskSummary = nonCompleted.map((t) => {
@@ -121,18 +122,20 @@ export function useAI(apiKey: string, provider: Provider, model: string) {
 
       const assistantMsg: ChatMessage = { role: 'assistant', content: response, timestamp: new Date().toISOString() };
       setChatHistory((prev) => [...prev, assistantMsg]);
+      ChatStorage.saveMessage(assistantMsg);
       return { response, recomputeContext, actions };
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : 'something went wrong';
       const errorResponse: ChatMessage = { role: 'assistant', content: `sorry, I hit an error: ${errMsg}`, timestamp: new Date().toISOString() };
       setChatHistory((prev) => [...prev, errorResponse]);
+      ChatStorage.saveMessage(errorResponse);
       return { response: errorResponse.content, recomputeContext: null, actions: [] };
     } finally {
       setChatting(false);
     }
   }, [apiKey, chatHistory]);
 
-  const generateGreeting = useCallback(async (tasks: Task[], view: ComputedView): Promise<string | null> => {
+  const generateGreeting = useCallback(async (tasks: Task[], view: ComputedView, recentChat?: ChatMessage[]): Promise<string | null> => {
     if (!apiKey) return null;
     try {
       const focusNames = view.focusToday.map((id) => {
@@ -164,13 +167,14 @@ export function useAI(apiKey: string, provider: Provider, model: string) {
           },
           {
             role: 'user',
-            content: `Today's brief:\n- Focus tasks: ${focusNames.join(', ') || 'none set'}\n- Nudges: ${nudgeMessages.join('; ') || 'none'}\n- Top urgency: ${topUrgent.join(', ') || 'nothing pressing'}\n- Clusters: ${clusterSummary.join(', ') || 'none'}\n- Total active tasks: ${tasks.filter((t) => t.status === 'active').length}`,
+            content: `Today's brief:\n- Focus tasks: ${focusNames.join(', ') || 'none set'}\n- Nudges: ${nudgeMessages.join('; ') || 'none'}\n- Top urgency: ${topUrgent.join(', ') || 'nothing pressing'}\n- Clusters: ${clusterSummary.join(', ') || 'none'}\n- Total active tasks: ${tasks.filter((t) => t.status === 'active').length}${recentChat && recentChat.length > 0 ? `\n\nRecent conversations:\n${recentChat.slice(-10).map((m) => `${m.role}: ${m.content}`).join('\n')}` : ''}`,
           },
         ],
       });
 
       const assistantMsg: ChatMessage = { role: 'assistant', content: greeting, timestamp: new Date().toISOString() };
       setChatHistory((prev) => [...prev, assistantMsg]);
+      ChatStorage.saveMessage(assistantMsg);
       return greeting;
     } catch (error) {
       console.error('Greeting generation failed:', error);
