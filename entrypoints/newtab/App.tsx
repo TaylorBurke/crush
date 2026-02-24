@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTasks } from '../../src/hooks/useTasks';
 import { useSettings } from '../../src/hooks/useSettings';
 import { useAI } from '../../src/hooks/useAI';
@@ -22,6 +22,7 @@ export default function App() {
   const [computedView, setComputedView] = useState<ComputedView | null>(() => ViewStorage.get());
   const [chatOpen, setChatOpen] = useState(false);
   const [feedback, setFeedback] = useState<{ message: string } | null>(null);
+  const greetedRef = useRef(false);
 
   useEffect(() => {
     const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -36,7 +37,16 @@ export default function App() {
   useEffect(() => {
     if (hasApiKey && tasks.length > 0) {
       TaskStorage.purgeCompleted();
-      ai.generateBrief(tasks).then((view) => { if (view) setComputedView(view); });
+      ai.generateBrief(tasks).then(async (view) => {
+        if (!view) return;
+        setComputedView(view);
+        // Generate daily greeting on first fresh brief of the session
+        if (!greetedRef.current && ai.chatHistory.length === 0) {
+          greetedRef.current = true;
+          const greeting = await ai.generateGreeting(tasks, view);
+          if (greeting) setChatOpen(true);
+        }
+      });
     }
   }, [hasApiKey]);
 
@@ -137,6 +147,15 @@ export default function App() {
         if (target) {
           updateTask(target.id, { importance: action.importance });
           currentTasks = currentTasks.map((t) => t.id === target.id ? { ...t, importance: action.importance } : t);
+          counts.updated++;
+        }
+      } else if (action.action === 'update_dependencies') {
+        const target = currentTasks.find((t) => t.id === action.targetTaskId);
+        if (target) {
+          const newBlocks = [...new Set([...target.relationships.blocks, ...action.blocks])];
+          const newBlockedBy = [...new Set([...target.relationships.blockedBy, ...action.blockedBy])];
+          updateTask(target.id, { relationships: { ...target.relationships, blocks: newBlocks, blockedBy: newBlockedBy } });
+          currentTasks = currentTasks.map((t) => t.id === target.id ? { ...t, relationships: { ...t.relationships, blocks: newBlocks, blockedBy: newBlockedBy } } : t);
           counts.updated++;
         }
       }

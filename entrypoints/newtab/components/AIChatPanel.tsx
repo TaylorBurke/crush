@@ -44,7 +44,7 @@ export function AIChatPanel({ open, onClose, onSend, messages, isLoading }: AICh
           {messages.map((msg, i) => (
             <div key={i} className="text-sm text-left">
               {msg.role === 'user' ? (
-                <p className="font-medium text-text-primary">{msg.content}</p>
+                <p className="text-text-muted">{msg.content}</p>
               ) : (
                 <div>
                   <div className="rounded-xl bg-surface px-4 py-2.5 text-text-primary">

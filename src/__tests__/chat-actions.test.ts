@@ -122,5 +122,38 @@ describe('chat-actions', () => {
         expect(actions[0].tags).toEqual(['valid']);
       }
     });
+
+    it('extracts update_dependencies action', () => {
+      const raw = `linked those up!\n\n[ACTIONS]\n[{"action":"update_dependencies","targetTaskId":"task-1","blocks":["task-2"],"blockedBy":["task-3"]}]\n[/ACTIONS]`;
+      const { cleaned, actions } = parseActionsBlock(raw);
+      expect(cleaned).toBe('linked those up!');
+      expect(actions).toEqual([{ action: 'update_dependencies', targetTaskId: 'task-1', blocks: ['task-2'], blockedBy: ['task-3'] }]);
+    });
+
+    it('defaults update_dependencies arrays to empty when missing', () => {
+      const raw = `done!\n\n[ACTIONS]\n[{"action":"update_dependencies","targetTaskId":"task-1"}]\n[/ACTIONS]`;
+      const { actions } = parseActionsBlock(raw);
+      expect(actions).toHaveLength(1);
+      if (actions[0].action === 'update_dependencies') {
+        expect(actions[0].blocks).toEqual([]);
+        expect(actions[0].blockedBy).toEqual([]);
+      }
+    });
+
+    it('filters out update_dependencies with missing targetTaskId', () => {
+      const raw = `ok!\n\n[ACTIONS]\n[{"action":"update_dependencies","blocks":["task-2"]}]\n[/ACTIONS]`;
+      const { actions } = parseActionsBlock(raw);
+      expect(actions).toEqual([]);
+    });
+
+    it('filters non-string IDs from update_dependencies arrays', () => {
+      const raw = `done!\n\n[ACTIONS]\n[{"action":"update_dependencies","targetTaskId":"task-1","blocks":[123,"task-2",null],"blockedBy":["task-3",true]}]\n[/ACTIONS]`;
+      const { actions } = parseActionsBlock(raw);
+      expect(actions).toHaveLength(1);
+      if (actions[0].action === 'update_dependencies') {
+        expect(actions[0].blocks).toEqual(['task-2']);
+        expect(actions[0].blockedBy).toEqual(['task-3']);
+      }
+    });
   });
 });

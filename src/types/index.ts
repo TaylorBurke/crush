@@ -59,7 +59,8 @@ export type ChatAction =
   | { action: 'create'; title: string; deadline?: string | null; importance: Importance; tags?: string[] }
   | { action: 'complete'; targetTaskId: string }
   | { action: 'defer'; targetTaskId: string }
-  | { action: 'update_importance'; targetTaskId: string; importance: Importance };
+  | { action: 'update_importance'; targetTaskId: string; importance: Importance }
+  | { action: 'update_dependencies'; targetTaskId: string; blocks: string[]; blockedBy: string[] };
 
 export interface ChatResult {
   response: string;

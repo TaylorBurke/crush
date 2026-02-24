@@ -1,7 +1,7 @@
 import type { ChatAction, Importance } from '../types';
 
 const ACTIONS_REGEX = /\[ACTIONS\]\s*([\s\S]*?)\s*\[\/ACTIONS\]/;
-const VALID_ACTIONS = ['create', 'complete', 'defer', 'update_importance'] as const;
+const VALID_ACTIONS = ['create', 'complete', 'defer', 'update_importance', 'update_dependencies'] as const;
 const VALID_IMPORTANCE = ['high', 'medium', 'low'] as const;
 
 export function parseActionsBlock(rawResponse: string): { cleaned: string; actions: ChatAction[] } {
@@ -45,6 +45,14 @@ export function parseActionsBlock(rawResponse: string): { cleaned: string; actio
           const importance: Importance = VALID_IMPORTANCE.includes(item.importance as Importance) ? item.importance as Importance : 'medium';
           if (!targetTaskId) return null;
           return { action, targetTaskId, importance } as ChatAction;
+        }
+
+        if (action === 'update_dependencies') {
+          const targetTaskId = typeof item.targetTaskId === 'string' ? item.targetTaskId : '';
+          if (!targetTaskId) return null;
+          const blocks = Array.isArray(item.blocks) ? item.blocks.filter((id: unknown) => typeof id === 'string') : [];
+          const blockedBy = Array.isArray(item.blockedBy) ? item.blockedBy.filter((id: unknown) => typeof id === 'string') : [];
+          return { action, targetTaskId, blocks, blockedBy } as ChatAction;
         }
 
         return null;
