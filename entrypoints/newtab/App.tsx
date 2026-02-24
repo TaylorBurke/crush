@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTasks } from '../../src/hooks/useTasks';
 import { useSettings } from '../../src/hooks/useSettings';
 import { useAI } from '../../src/hooks/useAI';
-import { ViewStorage, TaskStorage } from '../../src/lib/storage';
+import { ViewStorage, TaskStorage, ChatStorage } from '../../src/lib/storage';
 import { Greeting } from './components/Greeting';
 import { SmartInput } from './components/SmartInput';
 import { FocusCards } from './components/FocusCards';
@@ -37,13 +37,14 @@ export default function App() {
   useEffect(() => {
     if (hasApiKey && tasks.length > 0) {
       TaskStorage.purgeCompleted();
-      ai.generateBrief(tasks).then(async (view) => {
+      ChatStorage.purgeOld();
+      ai.generateBrief(tasks, false, undefined, ChatStorage.getRecent(2)).then(async (view) => {
         if (!view) return;
         setComputedView(view);
         // Generate daily greeting on first fresh brief of the session
         if (!greetedRef.current && ai.chatHistory.length === 0) {
           greetedRef.current = true;
-          const greeting = await ai.generateGreeting(tasks, view);
+          const greeting = await ai.generateGreeting(tasks, view, ChatStorage.getRecent(2));
           if (greeting) setChatOpen(true);
         }
       });
