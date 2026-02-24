@@ -13,10 +13,10 @@ import { AIChatPanel } from './components/AIChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { BookmarkBar } from './components/BookmarkBar';
 import { applyTheme } from '../../src/lib/themes';
-import type { ComputedView } from '../../src/types';
+import type { ComputedView, ChatAction } from '../../src/types';
 
 export default function App() {
-  const { tasks, activeTasks, deferredTasks, somedayTasks, addTask, completeTask, deferTask } = useTasks();
+  const { tasks, activeTasks, deferredTasks, somedayTasks, addTask, completeTask, deferTask, updateTask } = useTasks();
   const { settings, updateSettings, hasApiKey } = useSettings();
   const ai = useAI(settings.apiKey, settings.provider, settings.model);
   const [computedView, setComputedView] = useState<ComputedView | null>(() => ViewStorage.get());
@@ -99,12 +99,68 @@ export default function App() {
     }
   };
 
-  const handleChat = async (message: string) => {
-    const { response, recomputeContext } = await ai.chat(message, tasks, computedView);
-    if (recomputeContext && hasApiKey) {
-      ai.generateBrief(tasks, true, recomputeContext).then((view) => { if (view) setComputedView(view); });
+  const handleChat = async (message: string): Promise<{ response: string; actionSummary: string | null }> => {
+    const { response, recomputeContext, actions } = await ai.chat(message, tasks, computedView);
+
+    // Execute actions
+    let currentTasks = tasks;
+    const counts = { created: 0, completed: 0, deferred: 0, updated: 0 };
+
+    for (const action of actions) {
+      if (action.action === 'create') {
+        const newTask = addTask({
+          text: action.title,
+          parsed: { title: action.title, deadline: action.deadline ?? null, tags: action.tags ?? [] },
+          importance: action.importance,
+          relationships: { blocks: [], blockedBy: [], cluster: null },
+        });
+        if (newTask) {
+          currentTasks = [...currentTasks, newTask];
+          counts.created++;
+        }
+      } else if (action.action === 'complete') {
+        const target = currentTasks.find((t) => t.id === action.targetTaskId);
+        if (target) {
+          completeTask(target.id);
+          currentTasks = currentTasks.map((t) => t.id === target.id ? { ...t, status: 'completed' as const, completedAt: new Date().toISOString() } : t);
+          counts.completed++;
+        }
+      } else if (action.action === 'defer') {
+        const target = currentTasks.find((t) => t.id === action.targetTaskId);
+        if (target) {
+          deferTask(target.id);
+          currentTasks = currentTasks.map((t) => t.id === target.id ? { ...t, status: 'deferred' as const, deferrals: t.deferrals + 1 } : t);
+          counts.deferred++;
+        }
+      } else if (action.action === 'update_importance') {
+        const target = currentTasks.find((t) => t.id === action.targetTaskId);
+        if (target) {
+          updateTask(target.id, { importance: action.importance });
+          currentTasks = currentTasks.map((t) => t.id === target.id ? { ...t, importance: action.importance } : t);
+          counts.updated++;
+        }
+      }
     }
-    return response;
+
+    // Build action summary string
+    let actionSummary: string | null = null;
+    if (actions.length > 0) {
+      const parts: string[] = [];
+      if (counts.created) parts.push(`${counts.created} task${counts.created > 1 ? 's' : ''} added`);
+      if (counts.completed) parts.push(`${counts.completed} completed`);
+      if (counts.deferred) parts.push(`${counts.deferred} deferred`);
+      if (counts.updated) parts.push(`${counts.updated} updated`);
+      actionSummary = parts.join(', ');
+    }
+
+    // Recompute brief if actions were taken or recompute was requested
+    const shouldRecompute = actions.length > 0 || recomputeContext;
+    if (shouldRecompute && hasApiKey) {
+      const briefContext = [recomputeContext, actionSummary].filter(Boolean).join('; ') || undefined;
+      ai.generateBrief(currentTasks, true, briefContext).then((view) => { if (view) setComputedView(view); });
+    }
+
+    return { response, actionSummary };
   };
 
   return (

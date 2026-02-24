@@ -4,13 +4,14 @@ import type { ChatMessage } from '../../../src/types';
 interface AIChatPanelProps {
   open: boolean;
   onClose: () => void;
-  onSend: (message: string) => Promise<string>;
+  onSend: (message: string) => Promise<{ response: string; actionSummary: string | null }>;
   messages: ChatMessage[];
   isLoading: boolean;
 }
 
 export function AIChatPanel({ open, onClose, onSend, messages, isLoading }: AIChatPanelProps) {
   const [input, setInput] = useState('');
+  const [actionSummaries, setActionSummaries] = useState<Record<number, string>>({});
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -21,7 +22,12 @@ export function AIChatPanel({ open, onClose, onSend, messages, isLoading }: AICh
     if (!input.trim() || isLoading) return;
     const text = input.trim();
     setInput('');
-    await onSend(text);
+    const { actionSummary } = await onSend(text);
+    if (actionSummary) {
+      // Associate the summary with the assistant message that will be added
+      // The assistant message will be at the current messages length + 1 (after user msg)
+      setActionSummaries((prev) => ({ ...prev, [messages.length + 1]: actionSummary }));
+    }
   };
 
   return (
@@ -33,15 +39,20 @@ export function AIChatPanel({ open, onClose, onSend, messages, isLoading }: AICh
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
           {messages.length === 0 && (
-            <p className="text-sm text-text-muted italic">ask me anything about your tasks. try "what should i focus on?" or "break down [task]"</p>
+            <p className="text-sm text-text-muted italic">ask me anything about your tasks. try "what should i focus on?" or "add a task to buy groceries"</p>
           )}
           {messages.map((msg, i) => (
             <div key={i} className="text-sm text-left">
               {msg.role === 'user' ? (
                 <p className="font-medium text-text-primary">{msg.content}</p>
               ) : (
-                <div className="rounded-xl bg-surface px-4 py-2.5 text-text-primary">
-                  {msg.content}
+                <div>
+                  <div className="rounded-xl bg-surface px-4 py-2.5 text-text-primary">
+                    {msg.content}
+                  </div>
+                  {(msg.actionSummary || actionSummaries[i]) && (
+                    <p className="mt-1 text-xs text-accent">{msg.actionSummary || actionSummaries[i]}</p>
+                  )}
                 </div>
               )}
             </div>

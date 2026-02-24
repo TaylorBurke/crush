@@ -52,6 +52,19 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
+  actionSummary?: string;
+}
+
+export type ChatAction =
+  | { action: 'create'; title: string; deadline?: string | null; importance: Importance; tags?: string[] }
+  | { action: 'complete'; targetTaskId: string }
+  | { action: 'defer'; targetTaskId: string }
+  | { action: 'update_importance'; targetTaskId: string; importance: Importance };
+
+export interface ChatResult {
+  response: string;
+  recomputeContext: string | null;
+  actions: ChatAction[];
 }
 
 export type Provider = 'openai' | 'openrouter';

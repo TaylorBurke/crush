@@ -36,19 +36,28 @@ function migrateSettings(raw: Record<string, unknown>): Settings {
   };
 }
 
+declare const chrome: {
+  storage?: {
+    local: {
+      get(key: string, cb: (result: Record<string, unknown>) => void): void;
+      set(items: Record<string, unknown>, cb: () => void): void;
+    };
+  };
+} | undefined;
+
 function getStorage() {
-  if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+  if (typeof chrome !== 'undefined' && chrome?.storage?.local) {
     return {
       async get(): Promise<Settings> {
         return new Promise((resolve) => {
-          chrome.storage.local.get(SETTINGS_KEY, (result) => {
-            resolve(result[SETTINGS_KEY] ? migrateSettings(result[SETTINGS_KEY]) : defaultSettings);
+          chrome!.storage!.local.get(SETTINGS_KEY, (result: Record<string, unknown>) => {
+            resolve(result[SETTINGS_KEY] ? migrateSettings(result[SETTINGS_KEY] as Record<string, unknown>) : defaultSettings);
           });
         });
       },
       async set(settings: Settings): Promise<void> {
         return new Promise((resolve) => {
-          chrome.storage.local.set({ [SETTINGS_KEY]: settings }, resolve);
+          chrome!.storage!.local.set({ [SETTINGS_KEY]: settings }, resolve);
         });
       },
     };
