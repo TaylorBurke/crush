@@ -2,6 +2,7 @@
 
 @theme {
   --animate-feedback-fade: feedback-fade 3s ease-in-out forwards;
+  --animate-highlight-glow: highlight-glow 2s ease-out;
 
   /* Semantic color tokens - light theme defaults */
   --color-bg-gradient-from: #faf5eb;
@@ -66,6 +67,15 @@
   10%  { opacity: 1; transform: translateY(0); }
   75%  { opacity: 1; transform: translateY(0); }
   100% { opacity: 0; transform: translateY(-2px); }
+}
+
+@keyframes highlight-glow {
+  0% { box-shadow: 0 0 0 3px var(--color-accent); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+.animate-highlight {
+  animation: highlight-glow 2s ease-out;
 }
 
 body {

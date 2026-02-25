@@ -6,6 +6,7 @@ interface TaskCardProps {
   onComplete: (id: string) => void;
   onDefer: (id: string) => void;
   variant?: 'card' | 'row';
+  highlighted?: boolean;
 }
 
 function formatDeadline(iso: string): string {
@@ -45,14 +46,14 @@ function emotionTintClass(emotion: EmotionalContext): string {
   }
 }
 
-export function TaskCard({ task, nudge, onComplete, onDefer, variant = 'card' }: TaskCardProps) {
+export function TaskCard({ task, nudge, onComplete, onDefer, variant = 'card', highlighted }: TaskCardProps) {
   const blockCount = task.relationships.blocks.length;
   const pastDue = isPastDue(task.parsed.deadline);
   const emotionClass = task.emotionalContext ? emotionTintClass(task.emotionalContext) : '';
 
   if (variant === 'row') {
     return (
-      <div className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-surface-hover ${emotionClass ? `border-l-2 ${emotionClass}` : ''}`}>
+      <div className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-surface-hover ${emotionClass ? `border-l-2 ${emotionClass}` : ''} ${highlighted ? 'animate-highlight' : ''}`}>
         <button
           onClick={() => onComplete(task.id)}
           aria-label="complete"
@@ -79,7 +80,7 @@ export function TaskCard({ task, nudge, onComplete, onDefer, variant = 'card' }:
   }
 
   return (
-    <div className={`relative flex flex-col justify-between rounded-2xl border border-border bg-surface p-5 shadow-sm transition-shadow hover:shadow-md ${emotionClass ? `border-l-2 ${emotionClass}` : ''}`}>
+    <div className={`relative flex flex-col justify-between rounded-2xl border border-border bg-surface p-5 shadow-sm transition-shadow hover:shadow-md ${emotionClass ? `border-l-2 ${emotionClass}` : ''} ${highlighted ? 'animate-highlight' : ''}`}>
       {pastDue && (
         <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">
           !

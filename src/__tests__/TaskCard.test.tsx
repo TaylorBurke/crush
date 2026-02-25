@@ -60,4 +60,28 @@ describe('TaskCard', () => {
     await userEvent.click(screen.getByLabelText(/defer/i));
     expect(onDefer).toHaveBeenCalledWith('test-1');
   });
+
+  it('applies highlight animation class when highlighted', () => {
+    const { container } = render(
+      <TaskCard task={mockTask} onComplete={() => {}} onDefer={() => {}} highlighted />
+    );
+    const card = container.firstElementChild!;
+    expect(card.className).toContain('animate-highlight');
+  });
+
+  it('does not apply highlight class by default', () => {
+    const { container } = render(
+      <TaskCard task={mockTask} onComplete={() => {}} onDefer={() => {}} />
+    );
+    const card = container.firstElementChild!;
+    expect(card.className).not.toContain('animate-highlight');
+  });
+
+  it('applies highlight animation class in row variant when highlighted', () => {
+    const { container } = render(
+      <TaskCard task={mockTask} onComplete={() => {}} onDefer={() => {}} variant="row" highlighted />
+    );
+    const card = container.firstElementChild!;
+    expect(card.className).toContain('animate-highlight');
+  });
 });
