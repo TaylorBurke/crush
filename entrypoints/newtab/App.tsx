@@ -72,12 +72,12 @@ export default function App() {
       ai.generateBrief(snapshot, false).then(async (view) => {
         if (!view) return;
         setComputedView(view);
+        setChatOpen(true);
         // Generate daily greeting on first fresh brief of the day
         if (!greetedRef.current && freshDay) {
           greetedRef.current = true;
           const greetingSnapshot = buildContextSnapshot(tasks, view, ChatStorage.getRecent(2), settings.userName);
-          const greeting = await ai.generateGreeting(greetingSnapshot);
-          if (greeting) setChatOpen(true);
+          await ai.generateGreeting(greetingSnapshot);
         }
       });
     }
