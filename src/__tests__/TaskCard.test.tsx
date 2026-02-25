@@ -84,4 +84,29 @@ describe('TaskCard', () => {
     const card = container.firstElementChild!;
     expect(card.className).toContain('animate-highlight');
   });
+
+  it('applies fall-away animation when dismissing', () => {
+    const { container } = render(
+      <TaskCard task={mockTask} onComplete={() => {}} onDefer={() => {}} dismissing />
+    );
+    const card = container.firstElementChild!;
+    expect(card.className).toContain('animate-fall-away');
+  });
+
+  it('applies slide-out animation when deferring', () => {
+    const { container } = render(
+      <TaskCard task={mockTask} onComplete={() => {}} onDefer={() => {}} deferring />
+    );
+    const card = container.firstElementChild!;
+    expect(card.className).toContain('animate-slide-out');
+  });
+
+  it('does not apply dismissal animations by default', () => {
+    const { container } = render(
+      <TaskCard task={mockTask} onComplete={() => {}} onDefer={() => {}} />
+    );
+    const card = container.firstElementChild!;
+    expect(card.className).not.toContain('animate-fall-away');
+    expect(card.className).not.toContain('animate-slide-out');
+  });
 });

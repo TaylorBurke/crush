@@ -77,6 +77,26 @@
   animation: highlight-glow 2s ease-out;
 }
 
+@keyframes fall-away {
+  0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(40px) rotate(2deg); }
+}
+
+.animate-fall-away {
+  animation: fall-away 0.4s ease-in forwards;
+  pointer-events: none;
+}
+
+@keyframes slide-out {
+  0% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(-30px); }
+}
+
+.animate-slide-out {
+  animation: slide-out 0.35s ease-in forwards;
+  pointer-events: none;
+}
+
 body {
   margin: 0;
   padding: 0;

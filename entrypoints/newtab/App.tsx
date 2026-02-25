@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useTasks } from '../../src/hooks/useTasks';
 import { useSettings } from '../../src/hooks/useSettings';
 import { useAI } from '../../src/hooks/useAI';
@@ -26,9 +26,27 @@ export default function App() {
   const [computedView, setComputedView] = useState<ComputedView | null>(() => ViewStorage.get());
   const [chatOpen, setChatOpen] = useState(false);
   const [highlightedTaskIds, setHighlightedTaskIds] = useState<Set<string>>(new Set());
+  const [dismissingTaskIds, setDismissingTaskIds] = useState<Set<string>>(new Set());
+  const [deferringTaskIds, setDeferringTaskIds] = useState<Set<string>>(new Set());
   const [feedback, setFeedback] = useState<{ message: string } | null>(null);
   const greetedRef = useRef(false);
   const migratedRef = useRef(false);
+
+  const animatedComplete = useCallback((id: string) => {
+    setDismissingTaskIds((prev) => new Set(prev).add(id));
+    setTimeout(() => {
+      completeTask(id);
+      setDismissingTaskIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
+    }, 400);
+  }, [completeTask]);
+
+  const animatedDefer = useCallback((id: string) => {
+    setDeferringTaskIds((prev) => new Set(prev).add(id));
+    setTimeout(() => {
+      deferTask(id);
+      setDeferringTaskIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
+    }, 350);
+  }, [deferTask]);
 
   useEffect(() => {
     const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -286,16 +304,16 @@ export default function App() {
             </div>
           )}
 
-          <FocusCards tasks={focusTasks} nudges={nudges} onComplete={completeTask} onDefer={deferTask} highlightedTaskIds={highlightedTaskIds} />
-          <NudgeSection tasks={deferredTasks} onComplete={completeTask} onDefer={deferTask} highlightedTaskIds={highlightedTaskIds} />
+          <FocusCards tasks={focusTasks} nudges={nudges} onComplete={animatedComplete} onDefer={animatedDefer} highlightedTaskIds={highlightedTaskIds} dismissingTaskIds={dismissingTaskIds} deferringTaskIds={deferringTaskIds} />
+          <NudgeSection tasks={deferredTasks} onComplete={animatedComplete} onDefer={animatedDefer} highlightedTaskIds={highlightedTaskIds} dismissingTaskIds={dismissingTaskIds} deferringTaskIds={deferringTaskIds} />
 
           {clusters.map((cluster) => {
             const clusterTasks = cluster.taskIds.map((id) => tasks.find((t) => t.id === id)).filter((t) => t && t.status === 'active') as typeof tasks;
             if (clusterTasks.length === 0) return null;
-            return <ClusterSection key={cluster.id} cluster={cluster} tasks={clusterTasks} onComplete={completeTask} onDefer={deferTask} highlightedTaskIds={highlightedTaskIds} />;
+            return <ClusterSection key={cluster.id} cluster={cluster} tasks={clusterTasks} onComplete={animatedComplete} onDefer={animatedDefer} highlightedTaskIds={highlightedTaskIds} dismissingTaskIds={dismissingTaskIds} deferringTaskIds={deferringTaskIds} />;
           })}
 
-          <SomedayBucket tasks={somedayTasks} onComplete={completeTask} onDefer={deferTask} highlightedTaskIds={highlightedTaskIds} />
+          <SomedayBucket tasks={somedayTasks} onComplete={animatedComplete} onDefer={animatedDefer} highlightedTaskIds={highlightedTaskIds} dismissingTaskIds={dismissingTaskIds} deferringTaskIds={deferringTaskIds} />
         </div>
       </div>
 
