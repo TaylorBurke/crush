@@ -17,7 +17,7 @@ import { AIChatPanel } from './components/AIChatPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { BookmarkBar } from './components/BookmarkBar';
 import { applyTheme } from '../../src/lib/themes';
-import type { ComputedView } from '../../src/types';
+import type { ComputedView, EffortLevel } from '../../src/types';
 
 export default function App() {
   const { tasks, activeTasks, deferredTasks, somedayTasks, addTask, completeTask, deferTask, updateTask } = useTasks();
@@ -25,6 +25,7 @@ export default function App() {
   const ai = useAI(settings.apiKey, settings.provider, settings.model);
   const [computedView, setComputedView] = useState<ComputedView | null>(() => ViewStorage.get());
   const [chatOpen, setChatOpen] = useState(false);
+  const [highlightedTaskIds, setHighlightedTaskIds] = useState<Set<string>>(new Set());
   const [feedback, setFeedback] = useState<{ message: string } | null>(null);
   const greetedRef = useRef(false);
   const migratedRef = useRef(false);
@@ -154,7 +155,7 @@ export default function App() {
     }
   };
 
-  const handleChat = async (message: string): Promise<{ response: string; actionSummary: string | null }> => {
+  const handleChat = async (message: string): Promise<{ response: string; actionSummary: string | null; createdTasks: Array<{ title: string; deadline: string | null; effort: EffortLevel | null }> }> => {
     const snapshot = buildContextSnapshot(tasks, computedView, ChatStorage.getRecent(2), settings.userName);
     const { response, recomputeContext, actions } = await ai.chat(message, snapshot);
 
@@ -167,6 +168,8 @@ export default function App() {
     // Execute actions
     let currentTasks = tasks;
     const counts = { created: 0, completed: 0, deferred: 0, updated: 0, memoriesSaved: memories.length };
+    const createdTasks: Array<{ title: string; deadline: string | null; effort: EffortLevel | null }> = [];
+    const createdIds: string[] = [];
 
     for (const action of actions) {
       if (action.action === 'create') {
@@ -187,6 +190,12 @@ export default function App() {
         if (newTask) {
           currentTasks = [...currentTasks, newTask];
           counts.created++;
+          createdTasks.push({
+            title: action.title,
+            deadline: action.deadline ?? null,
+            effort: action.estimatedEffort ?? null,
+          });
+          createdIds.push(newTask.id);
         }
       } else if (action.action === 'save_memory') {
         MemoryStorage.save({ type: action.type, content: action.content, source: 'chat', confidence: 0.7 });
@@ -231,6 +240,11 @@ export default function App() {
       }
     }
 
+    if (createdIds.length > 0) {
+      setHighlightedTaskIds(new Set(createdIds));
+      setTimeout(() => setHighlightedTaskIds(new Set()), 2000);
+    }
+
     // Build action summary string
     let actionSummary: string | null = null;
     const summaryParts: string[] = [];
@@ -249,7 +263,7 @@ export default function App() {
       ai.generateBrief(updatedSnapshot, true, briefContext).then((view) => { if (view) setComputedView(view); });
     }
 
-    return { response, actionSummary };
+    return { response, actionSummary, createdTasks };
   };
 
   return (
@@ -272,16 +286,16 @@ export default function App() {
             </div>
           )}
 
-          <FocusCards tasks={focusTasks} nudges={nudges} onComplete={completeTask} onDefer={deferTask} />
-          <NudgeSection tasks={deferredTasks} onComplete={completeTask} onDefer={deferTask} />
+          <FocusCards tasks={focusTasks} nudges={nudges} onComplete={completeTask} onDefer={deferTask} highlightedTaskIds={highlightedTaskIds} />
+          <NudgeSection tasks={deferredTasks} onComplete={completeTask} onDefer={deferTask} highlightedTaskIds={highlightedTaskIds} />
 
           {clusters.map((cluster) => {
             const clusterTasks = cluster.taskIds.map((id) => tasks.find((t) => t.id === id)).filter((t) => t && t.status === 'active') as typeof tasks;
             if (clusterTasks.length === 0) return null;
-            return <ClusterSection key={cluster.id} cluster={cluster} tasks={clusterTasks} onComplete={completeTask} onDefer={deferTask} />;
+            return <ClusterSection key={cluster.id} cluster={cluster} tasks={clusterTasks} onComplete={completeTask} onDefer={deferTask} highlightedTaskIds={highlightedTaskIds} />;
           })}
 
-          <SomedayBucket tasks={somedayTasks} onComplete={completeTask} onDefer={deferTask} />
+          <SomedayBucket tasks={somedayTasks} onComplete={completeTask} onDefer={deferTask} highlightedTaskIds={highlightedTaskIds} />
         </div>
       </div>
 

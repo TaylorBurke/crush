@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { getGreeting } from '../../../src/lib/date';
+import { ChatActionCards } from './ChatActionCards';
+import type { CreatedTaskInfo } from './ChatActionCards';
 import type { ChatMessage } from '../../../src/types';
 
 interface AIChatPanelProps {
   open: boolean;
   onClose: () => void;
-  onSend: (message: string) => Promise<{ response: string; actionSummary: string | null }>;
+  onSend: (message: string) => Promise<{ response: string; actionSummary: string | null; createdTasks: CreatedTaskInfo[] }>;
   messages: ChatMessage[];
   isLoading: boolean;
 }
@@ -18,6 +20,7 @@ export function AIChatPanel({ open, onClose, onSend, messages, isLoading }: AICh
   }, [isLoading, messages.length]);
   const [input, setInput] = useState('');
   const [actionSummaries, setActionSummaries] = useState<Record<number, string>>({});
+  const [createdTasksMap, setCreatedTasksMap] = useState<Record<number, CreatedTaskInfo[]>>({});
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,11 +31,14 @@ export function AIChatPanel({ open, onClose, onSend, messages, isLoading }: AICh
     if (!input.trim() || isLoading) return;
     const text = input.trim();
     setInput('');
-    const { actionSummary } = await onSend(text);
+    const { actionSummary, createdTasks } = await onSend(text);
     if (actionSummary) {
       // Associate the summary with the assistant message that will be added
       // The assistant message will be at the current messages length + 1 (after user msg)
       setActionSummaries((prev) => ({ ...prev, [messages.length + 1]: actionSummary }));
+    }
+    if (createdTasks.length > 0) {
+      setCreatedTasksMap((prev) => ({ ...prev, [messages.length + 1]: createdTasks }));
     }
   };
 
@@ -58,6 +64,9 @@ export function AIChatPanel({ open, onClose, onSend, messages, isLoading }: AICh
                   </div>
                   {(msg.actionSummary || actionSummaries[i]) && (
                     <p className="mt-1 text-xs text-accent">{msg.actionSummary || actionSummaries[i]}</p>
+                  )}
+                  {createdTasksMap[i]?.length > 0 && (
+                    <ChatActionCards tasks={createdTasksMap[i]} />
                   )}
                 </div>
               )}
