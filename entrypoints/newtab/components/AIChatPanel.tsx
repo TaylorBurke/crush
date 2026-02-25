@@ -19,8 +19,10 @@ export function AIChatPanel({ open, onClose, onSend, messages, isLoading }: AICh
     return 'crush';
   }, [isLoading, messages.length]);
   const [input, setInput] = useState('');
-  const [actionSummaries, setActionSummaries] = useState<Record<number, string>>({});
-  const [createdTasksMap, setCreatedTasksMap] = useState<Record<number, CreatedTaskInfo[]>>({});
+  const [actionSummaries, setActionSummaries] = useState<Record<string, string>>({});
+  const [createdTasksMap, setCreatedTasksMap] = useState<Record<string, CreatedTaskInfo[]>>({});
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,13 +34,17 @@ export function AIChatPanel({ open, onClose, onSend, messages, isLoading }: AICh
     const text = input.trim();
     setInput('');
     const { actionSummary, createdTasks } = await onSend(text);
-    if (actionSummary) {
-      // Associate the summary with the assistant message that will be added
-      // The assistant message will be at the current messages length + 1 (after user msg)
-      setActionSummaries((prev) => ({ ...prev, [messages.length + 1]: actionSummary }));
-    }
-    if (createdTasks.length > 0) {
-      setCreatedTasksMap((prev) => ({ ...prev, [messages.length + 1]: createdTasks }));
+    // Use ref to get the latest messages after onSend resolves
+    const latest = messagesRef.current;
+    const assistantMsg = latest[latest.length - 1];
+    if (assistantMsg?.role === 'assistant') {
+      const key = assistantMsg.timestamp;
+      if (actionSummary) {
+        setActionSummaries((prev) => ({ ...prev, [key]: actionSummary }));
+      }
+      if (createdTasks.length > 0) {
+        setCreatedTasksMap((prev) => ({ ...prev, [key]: createdTasks }));
+      }
     }
   };
 
@@ -62,11 +68,11 @@ export function AIChatPanel({ open, onClose, onSend, messages, isLoading }: AICh
                   <div className="rounded-xl bg-surface px-4 py-2.5 text-text-primary">
                     {msg.content}
                   </div>
-                  {(msg.actionSummary || actionSummaries[i]) && (
-                    <p className="mt-1 text-xs text-accent">{msg.actionSummary || actionSummaries[i]}</p>
+                  {(msg.actionSummary || actionSummaries[msg.timestamp]) && (
+                    <p className="mt-1 text-xs text-accent">{msg.actionSummary || actionSummaries[msg.timestamp]}</p>
                   )}
-                  {createdTasksMap[i]?.length > 0 && (
-                    <ChatActionCards tasks={createdTasksMap[i]} />
+                  {createdTasksMap[msg.timestamp]?.length > 0 && (
+                    <ChatActionCards tasks={createdTasksMap[msg.timestamp]} />
                   )}
                 </div>
               )}

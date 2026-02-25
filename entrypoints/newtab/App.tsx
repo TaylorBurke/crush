@@ -166,6 +166,10 @@ export default function App() {
       emotionalContext: parsed.emotionalContext,
     });
     setFeedback({ message: `${parsed.title} has been received` });
+    if (newTask) {
+      setHighlightedTaskIds(new Set([newTask.id]));
+      setTimeout(() => setHighlightedTaskIds(new Set()), 2000);
+    }
     if (hasApiKey && newTask) {
       const updatedTasks = [...tasks, newTask];
       const updatedSnapshot = buildContextSnapshot(updatedTasks, computedView, ChatStorage.getRecent(1), settings.userName);
