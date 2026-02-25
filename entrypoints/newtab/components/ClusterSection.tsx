@@ -7,9 +7,10 @@ interface ClusterSectionProps {
   tasks: Task[];
   onComplete: (id: string) => void;
   onDefer: (id: string) => void;
+  highlightedTaskIds?: Set<string>;
 }
 
-export function ClusterSection({ cluster, tasks, onComplete, onDefer }: ClusterSectionProps) {
+export function ClusterSection({ cluster, tasks, onComplete, onDefer, highlightedTaskIds }: ClusterSectionProps) {
   const [expanded, setExpanded] = useState(false);
   const percentage = Math.round(cluster.progress * 100);
   return (
@@ -25,7 +26,7 @@ export function ClusterSection({ cluster, tasks, onComplete, onDefer }: ClusterS
       {expanded && (
         <div className="mt-2 space-y-1 pl-2">
           {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} onComplete={onComplete} onDefer={onDefer} variant="row" />
+            <TaskCard key={task.id} task={task} onComplete={onComplete} onDefer={onDefer} variant="row" highlighted={highlightedTaskIds?.has(task.id)} />
           ))}
         </div>
       )}

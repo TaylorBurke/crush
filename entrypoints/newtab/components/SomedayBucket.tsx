@@ -6,9 +6,10 @@ interface SomedayBucketProps {
   tasks: Task[];
   onComplete: (id: string) => void;
   onDefer: (id: string) => void;
+  highlightedTaskIds?: Set<string>;
 }
 
-export function SomedayBucket({ tasks, onComplete, onDefer }: SomedayBucketProps) {
+export function SomedayBucket({ tasks, onComplete, onDefer, highlightedTaskIds }: SomedayBucketProps) {
   const [expanded, setExpanded] = useState(false);
   if (tasks.length === 0) return null;
   return (
@@ -21,7 +22,7 @@ export function SomedayBucket({ tasks, onComplete, onDefer }: SomedayBucketProps
       {expanded && (
         <div className="mt-2 space-y-1">
           {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} onComplete={onComplete} onDefer={onDefer} variant="row" />
+            <TaskCard key={task.id} task={task} onComplete={onComplete} onDefer={onDefer} variant="row" highlighted={highlightedTaskIds?.has(task.id)} />
           ))}
         </div>
       )}
