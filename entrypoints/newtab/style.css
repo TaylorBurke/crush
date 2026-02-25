@@ -2,7 +2,6 @@
 
 @theme {
   --animate-feedback-fade: feedback-fade 3s ease-in-out forwards;
-  --animate-highlight-glow: highlight-glow 2s ease-out;
 
   /* Semantic color tokens - light theme defaults */
   --color-bg-gradient-from: #faf5eb;
