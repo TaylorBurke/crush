@@ -9,6 +9,7 @@ interface TaskCardProps {
   highlighted?: boolean;
   dismissing?: boolean;
   deferring?: boolean;
+  onHighlightComplete?: (id: string) => void;
 }
 
 function formatDeadline(iso: string): string {
@@ -48,15 +49,21 @@ function emotionTintClass(emotion: EmotionalContext): string {
   }
 }
 
-export function TaskCard({ task, nudge, onComplete, onDefer, variant = 'card', highlighted, dismissing, deferring }: TaskCardProps) {
+export function TaskCard({ task, nudge, onComplete, onDefer, variant = 'card', highlighted, dismissing, deferring, onHighlightComplete }: TaskCardProps) {
   const animationClass = dismissing ? 'animate-fall-away' : deferring ? 'animate-slide-out' : '';
+
+  const handleAnimationEnd = (e: React.AnimationEvent) => {
+    if (e.animationName === 'highlight-glow' && onHighlightComplete) {
+      onHighlightComplete(task.id);
+    }
+  };
   const blockCount = task.relationships.blocks.length;
   const pastDue = isPastDue(task.parsed.deadline);
   const emotionClass = task.emotionalContext ? emotionTintClass(task.emotionalContext) : '';
 
   if (variant === 'row') {
     return (
-      <div className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-surface-hover ${emotionClass ? `border-l-2 ${emotionClass}` : ''} ${highlighted ? 'animate-highlight' : ''} ${animationClass}`}>
+      <div className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-surface-hover ${emotionClass ? `border-l-2 ${emotionClass}` : ''} ${highlighted ? 'animate-highlight' : ''} ${animationClass}`} onAnimationEnd={handleAnimationEnd}>
         <button
           onClick={() => onComplete(task.id)}
           aria-label="complete"
@@ -83,7 +90,7 @@ export function TaskCard({ task, nudge, onComplete, onDefer, variant = 'card', h
   }
 
   return (
-    <div className={`relative flex flex-col justify-between rounded-2xl border border-border bg-surface p-5 shadow-sm transition-shadow hover:shadow-md ${emotionClass ? `border-l-2 ${emotionClass}` : ''} ${highlighted ? 'animate-highlight' : ''} ${animationClass}`}>
+    <div className={`relative flex flex-col justify-between rounded-2xl border border-border bg-surface p-5 shadow-sm transition-shadow hover:shadow-md ${emotionClass ? `border-l-2 ${emotionClass}` : ''} ${highlighted ? 'animate-highlight' : ''} ${animationClass}`} onAnimationEnd={handleAnimationEnd}>
       {pastDue && (
         <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">
           !

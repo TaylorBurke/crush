@@ -33,6 +33,14 @@ export default function App() {
   const greetedRef = useRef(false);
   const migratedRef = useRef(false);
 
+  const clearHighlight = useCallback((id: string) => {
+    setHighlightedTaskIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
+
   const animatedComplete = useCallback((id: string) => {
     const task = tasks.find((t) => t.id === id);
     setDismissingTaskIds((prev) => new Set(prev).add(id));
@@ -173,7 +181,6 @@ export default function App() {
     setFeedback({ message: `${parsed.title} has been received` });
     if (newTask) {
       setHighlightedTaskIds(new Set([newTask.id]));
-      setTimeout(() => setHighlightedTaskIds(new Set()), 2000);
     }
     if (hasApiKey && newTask) {
       const updatedTasks = [...tasks, newTask];
@@ -269,7 +276,6 @@ export default function App() {
 
     if (createdIds.length > 0) {
       setHighlightedTaskIds(new Set(createdIds));
-      setTimeout(() => setHighlightedTaskIds(new Set()), 2000);
     }
 
     // Build action summary string
@@ -313,16 +319,16 @@ export default function App() {
             </div>
           )}
 
-          <FocusCards tasks={focusTasks} nudges={nudges} onComplete={animatedComplete} onDefer={animatedDefer} highlightedTaskIds={highlightedTaskIds} dismissingTaskIds={dismissingTaskIds} deferringTaskIds={deferringTaskIds} />
-          <NudgeSection tasks={deferredTasks} onComplete={animatedComplete} onDefer={animatedDefer} highlightedTaskIds={highlightedTaskIds} dismissingTaskIds={dismissingTaskIds} deferringTaskIds={deferringTaskIds} />
+          <FocusCards tasks={focusTasks} nudges={nudges} onComplete={animatedComplete} onDefer={animatedDefer} highlightedTaskIds={highlightedTaskIds} dismissingTaskIds={dismissingTaskIds} deferringTaskIds={deferringTaskIds} onHighlightComplete={clearHighlight} />
+          <NudgeSection tasks={deferredTasks} onComplete={animatedComplete} onDefer={animatedDefer} highlightedTaskIds={highlightedTaskIds} dismissingTaskIds={dismissingTaskIds} deferringTaskIds={deferringTaskIds} onHighlightComplete={clearHighlight} />
 
           {clusters.map((cluster) => {
             const clusterTasks = cluster.taskIds.map((id) => tasks.find((t) => t.id === id)).filter((t) => t && t.status === 'active') as typeof tasks;
             if (clusterTasks.length === 0) return null;
-            return <ClusterSection key={cluster.id} cluster={cluster} tasks={clusterTasks} onComplete={animatedComplete} onDefer={animatedDefer} highlightedTaskIds={highlightedTaskIds} dismissingTaskIds={dismissingTaskIds} deferringTaskIds={deferringTaskIds} />;
+            return <ClusterSection key={cluster.id} cluster={cluster} tasks={clusterTasks} onComplete={animatedComplete} onDefer={animatedDefer} highlightedTaskIds={highlightedTaskIds} dismissingTaskIds={dismissingTaskIds} deferringTaskIds={deferringTaskIds} onHighlightComplete={clearHighlight} />;
           })}
 
-          <SomedayBucket tasks={somedayTasks} onComplete={animatedComplete} onDefer={animatedDefer} highlightedTaskIds={highlightedTaskIds} dismissingTaskIds={dismissingTaskIds} deferringTaskIds={deferringTaskIds} />
+          <SomedayBucket tasks={somedayTasks} onComplete={animatedComplete} onDefer={animatedDefer} highlightedTaskIds={highlightedTaskIds} dismissingTaskIds={dismissingTaskIds} deferringTaskIds={deferringTaskIds} onHighlightComplete={clearHighlight} />
         </div>
       </div>
 

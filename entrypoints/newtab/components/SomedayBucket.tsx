@@ -9,9 +9,10 @@ interface SomedayBucketProps {
   highlightedTaskIds?: Set<string>;
   dismissingTaskIds?: Set<string>;
   deferringTaskIds?: Set<string>;
+  onHighlightComplete?: (id: string) => void;
 }
 
-export function SomedayBucket({ tasks, onComplete, onDefer, highlightedTaskIds, dismissingTaskIds, deferringTaskIds }: SomedayBucketProps) {
+export function SomedayBucket({ tasks, onComplete, onDefer, highlightedTaskIds, dismissingTaskIds, deferringTaskIds, onHighlightComplete }: SomedayBucketProps) {
   const [expanded, setExpanded] = useState(false);
   if (tasks.length === 0) return null;
   return (
@@ -24,7 +25,7 @@ export function SomedayBucket({ tasks, onComplete, onDefer, highlightedTaskIds, 
       {expanded && (
         <div className="mt-2 space-y-1">
           {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} onComplete={onComplete} onDefer={onDefer} variant="row" highlighted={highlightedTaskIds?.has(task.id)} dismissing={dismissingTaskIds?.has(task.id)} deferring={deferringTaskIds?.has(task.id)} />
+            <TaskCard key={task.id} task={task} onComplete={onComplete} onDefer={onDefer} variant="row" highlighted={highlightedTaskIds?.has(task.id)} dismissing={dismissingTaskIds?.has(task.id)} deferring={deferringTaskIds?.has(task.id)} onHighlightComplete={onHighlightComplete} />
           ))}
         </div>
       )}

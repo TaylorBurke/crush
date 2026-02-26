@@ -11,9 +11,10 @@ interface FocusCardsProps {
   highlightedTaskIds?: Set<string>;
   dismissingTaskIds?: Set<string>;
   deferringTaskIds?: Set<string>;
+  onHighlightComplete?: (id: string) => void;
 }
 
-export function FocusCards({ tasks, nudges, onComplete, onDefer, highlightedTaskIds, dismissingTaskIds, deferringTaskIds }: FocusCardsProps) {
+export function FocusCards({ tasks, nudges, onComplete, onDefer, highlightedTaskIds, dismissingTaskIds, deferringTaskIds, onHighlightComplete }: FocusCardsProps) {
   const gridRef = useRef<HTMLDivElement>(null);
   useLayoutTransition(gridRef);
 
@@ -25,7 +26,7 @@ export function FocusCards({ tasks, nudges, onComplete, onDefer, highlightedTask
       <div ref={gridRef} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {tasks.map((task) => (
           <div key={task.id} data-key={task.id}>
-            <TaskCard task={task} nudge={nudgeMap[task.id]} onComplete={onComplete} onDefer={onDefer} highlighted={highlightedTaskIds?.has(task.id)} dismissing={dismissingTaskIds?.has(task.id)} deferring={deferringTaskIds?.has(task.id)} />
+            <TaskCard task={task} nudge={nudgeMap[task.id]} onComplete={onComplete} onDefer={onDefer} highlighted={highlightedTaskIds?.has(task.id)} dismissing={dismissingTaskIds?.has(task.id)} deferring={deferringTaskIds?.has(task.id)} onHighlightComplete={onHighlightComplete} />
           </div>
         ))}
       </div>

@@ -10,9 +10,10 @@ interface ClusterSectionProps {
   highlightedTaskIds?: Set<string>;
   dismissingTaskIds?: Set<string>;
   deferringTaskIds?: Set<string>;
+  onHighlightComplete?: (id: string) => void;
 }
 
-export function ClusterSection({ cluster, tasks, onComplete, onDefer, highlightedTaskIds, dismissingTaskIds, deferringTaskIds }: ClusterSectionProps) {
+export function ClusterSection({ cluster, tasks, onComplete, onDefer, highlightedTaskIds, dismissingTaskIds, deferringTaskIds, onHighlightComplete }: ClusterSectionProps) {
   const [expanded, setExpanded] = useState(false);
   const percentage = Math.round(cluster.progress * 100);
   return (
@@ -28,7 +29,7 @@ export function ClusterSection({ cluster, tasks, onComplete, onDefer, highlighte
       {expanded && (
         <div className="mt-2 space-y-1 pl-2">
           {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} onComplete={onComplete} onDefer={onDefer} variant="row" highlighted={highlightedTaskIds?.has(task.id)} dismissing={dismissingTaskIds?.has(task.id)} deferring={deferringTaskIds?.has(task.id)} />
+            <TaskCard key={task.id} task={task} onComplete={onComplete} onDefer={onDefer} variant="row" highlighted={highlightedTaskIds?.has(task.id)} dismissing={dismissingTaskIds?.has(task.id)} deferring={deferringTaskIds?.has(task.id)} onHighlightComplete={onHighlightComplete} />
           ))}
         </div>
       )}
