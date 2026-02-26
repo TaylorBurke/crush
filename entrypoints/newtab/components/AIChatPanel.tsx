@@ -61,7 +61,9 @@ export function AIChatPanel({ open, onClose, onSend, messages, isLoading }: AICh
           )}
           {messages.map((msg, i) => (
             <div key={i} className="text-sm text-left">
-              {msg.role === 'user' ? (
+              {msg.role === 'system' ? (
+                <p className="text-xs text-text-muted italic text-center">{msg.content}</p>
+              ) : msg.role === 'user' ? (
                 <p className="text-text-muted">{msg.content}</p>
               ) : (
                 <div>

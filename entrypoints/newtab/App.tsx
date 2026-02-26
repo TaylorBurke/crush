@@ -23,6 +23,7 @@ export default function App() {
   const { tasks, activeTasks, deferredTasks, somedayTasks, addTask, completeTask, deferTask, updateTask } = useTasks();
   const { settings, updateSettings, hasApiKey } = useSettings();
   const ai = useAI(settings.apiKey, settings.provider, settings.model);
+  const { addSystemMessage } = ai;
   const [computedView, setComputedView] = useState<ComputedView | null>(() => ViewStorage.get());
   const [chatOpen, setChatOpen] = useState(false);
   const [highlightedTaskIds, setHighlightedTaskIds] = useState<Set<string>>(new Set());
@@ -33,20 +34,24 @@ export default function App() {
   const migratedRef = useRef(false);
 
   const animatedComplete = useCallback((id: string) => {
+    const task = tasks.find((t) => t.id === id);
     setDismissingTaskIds((prev) => new Set(prev).add(id));
     setTimeout(() => {
       completeTask(id);
       setDismissingTaskIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
+      if (task) addSystemMessage(`Task "${task.parsed.title}" was marked complete.`);
     }, 400);
-  }, [completeTask]);
+  }, [completeTask, tasks, addSystemMessage]);
 
   const animatedDefer = useCallback((id: string) => {
+    const task = tasks.find((t) => t.id === id);
     setDeferringTaskIds((prev) => new Set(prev).add(id));
     setTimeout(() => {
       deferTask(id);
       setDeferringTaskIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
+      if (task) addSystemMessage(`Task "${task.parsed.title}" was deferred.`);
     }, 350);
-  }, [deferTask]);
+  }, [deferTask, tasks, addSystemMessage]);
 
   useEffect(() => {
     const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;

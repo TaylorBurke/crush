@@ -73,7 +73,10 @@ export function useAI(apiKey: string, provider: Provider, model: string) {
         model,
         messages: [
           { role: 'system', content: systemPrompt },
-          ...chatHistory.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+          ...chatHistory.map((m) => ({
+            role: (m.role === 'system' ? 'user' : m.role) as 'user' | 'assistant',
+            content: m.role === 'system' ? `[system notification] ${m.content}` : m.content,
+          })),
           { role: 'user' as const, content: userMessage },
         ],
       });
@@ -121,5 +124,11 @@ export function useAI(apiKey: string, provider: Provider, model: string) {
 
   const clearChat = useCallback(() => { setChatHistory([]); }, []);
 
-  return { parseTask, generateBrief, generateGreeting, chat, clearChat, chatHistory, isParsing: parsing, isBriefing: briefing, isChatting: chatting };
+  const addSystemMessage = useCallback((content: string) => {
+    const msg: ChatMessage = { role: 'system', content, timestamp: new Date().toISOString() };
+    setChatHistory((prev) => [...prev, msg]);
+    ChatStorage.saveMessage(msg);
+  }, []);
+
+  return { parseTask, generateBrief, generateGreeting, chat, clearChat, addSystemMessage, chatHistory, isParsing: parsing, isBriefing: briefing, isChatting: chatting };
 }
