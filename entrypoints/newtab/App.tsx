@@ -208,9 +208,11 @@ export default function App() {
 
     // Execute actions
     let currentTasks = tasks;
-    const counts = { created: 0, completed: 0, deferred: 0, updated: 0, memoriesSaved: memories.length };
+    const counts = { created: 0, completed: 0, deferred: 0, focused: 0, unfocused: 0, updated: 0, memoriesSaved: memories.length };
     const createdTasks: Array<{ title: string; deadline: string | null; effort: EffortLevel | null }> = [];
     const createdIds: string[] = [];
+    const focusAdds: string[] = [];
+    const focusRemoves: string[] = [];
 
     for (const action of actions) {
       if (action.action === 'create') {
@@ -262,6 +264,15 @@ export default function App() {
           currentTasks = currentTasks.map((t) => t.id === target.id ? { ...t, status: 'deferred' as const, deferrals: t.deferrals + 1 } : t);
           counts.deferred++;
         }
+      } else if (action.action === 'set_focus') {
+        const target = currentTasks.find((t) => t.id === action.targetTaskId && t.status === 'active');
+        if (target) {
+          focusAdds.push(target.id);
+          counts.focused++;
+        }
+      } else if (action.action === 'remove_focus') {
+        focusRemoves.push(action.targetTaskId);
+        counts.unfocused++;
       } else if (action.action === 'update_importance') {
         const target = currentTasks.find((t) => t.id === action.targetTaskId);
         if (target) {
@@ -291,16 +302,43 @@ export default function App() {
     if (counts.created) summaryParts.push(`${counts.created} task${counts.created > 1 ? 's' : ''} added`);
     if (counts.completed) summaryParts.push(`${counts.completed} completed`);
     if (counts.deferred) summaryParts.push(`${counts.deferred} deferred`);
+    if (counts.focused) summaryParts.push(`${counts.focused} focused`);
+    if (counts.unfocused) summaryParts.push(`${counts.unfocused} unfocused`);
     if (counts.updated) summaryParts.push(`${counts.updated} updated`);
     if (counts.memoriesSaved) summaryParts.push(`${counts.memoriesSaved} memory saved`);
     if (summaryParts.length > 0) actionSummary = summaryParts.join(', ');
 
-    // Recompute brief if actions were taken or recompute was requested
-    const shouldRecompute = actions.length > 0 || recomputeContext || memories.length > 0;
+    // Apply focus deltas
+    const hasFocusDeltas = focusAdds.length > 0 || focusRemoves.length > 0;
+    const applyFocusDeltas = (view: ComputedView): ComputedView => {
+      let focusIds = [...view.focusToday];
+      for (const id of focusAdds) {
+        if (!focusIds.includes(id)) focusIds.push(id);
+      }
+      focusIds = focusIds.filter((id) => !focusRemoves.includes(id));
+      return { ...view, focusToday: focusIds };
+    };
+
+    // Determine if non-focus actions were taken
+    const nonFocusActionCount = actions.filter((a) => a.action !== 'set_focus' && a.action !== 'remove_focus').length;
+    const shouldRecompute = nonFocusActionCount > 0 || recomputeContext || memories.length > 0;
+
     if (shouldRecompute && hasApiKey) {
       const briefContext = [recomputeContext, actionSummary].filter(Boolean).join('; ') || undefined;
       const updatedSnapshot = buildContextSnapshot(currentTasks, computedView, ChatStorage.getRecent(2), settings.userName);
-      ai.generateBrief(updatedSnapshot, true, briefContext).then((view) => { if (view) setComputedView(view); });
+      ai.generateBrief(updatedSnapshot, true, briefContext).then((view) => {
+        if (view) {
+          const patched = hasFocusDeltas ? applyFocusDeltas(view) : view;
+          setComputedView(patched);
+          ViewStorage.save(patched);
+        }
+      });
+    } else if (hasFocusDeltas) {
+      // Focus-only actions: skip brief recompute, apply deltas instantly
+      const baseView = computedView ?? { generatedAt: new Date().toISOString(), focusToday: [], nudges: [], urgencyScores: {}, clusters: [] };
+      const patched = applyFocusDeltas(baseView);
+      setComputedView(patched);
+      ViewStorage.save(patched);
     }
 
     if (actionSummary || createdTasks.length > 0) {

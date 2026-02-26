@@ -26,6 +26,8 @@ When to use [ACTIONS]:
 - User explicitly asks to create/add tasks (e.g. "add a task to buy groceries", "create three tasks for the project")
 - User asks to mark something as done/complete (e.g. "mark the pitch deck as done", "i finished the report")
 - User asks to defer/postpone a task (e.g. "push the taxes to next week", "defer the meeting prep")
+- User asks to add a task to their focus list (e.g. "focus on the pitch deck", "put X in my focus")
+- User asks to remove a task from their focus list (e.g. "remove X from my focus", "unfocus the pitch deck")
 - User asks to change a task's priority/importance (e.g. "make the pitch deck high priority", "lower the importance of X")
 - User asks to set or change task dependencies (e.g. "the API task blocks the frontend task", "mark X as blocked by Y")
 
@@ -45,6 +47,8 @@ Action format — append this at the very end of your response:
   {"action":"create","title":"Task title","deadline":"YYYY-MM-DD or null","importance":"high|medium|low","tags":["tag1"],"estimatedEffort":"quick|deep|draining|null","emotionalContext":"excited|dreading|neutral|null","clusterId":"existing-cluster-id or null"},
   {"action":"complete","targetTaskId":"existing-task-id"},
   {"action":"defer","targetTaskId":"existing-task-id"},
+  {"action":"set_focus","targetTaskId":"existing-task-id"},
+  {"action":"remove_focus","targetTaskId":"existing-task-id"},
   {"action":"update_importance","targetTaskId":"existing-task-id","importance":"high|medium|low"},
   {"action":"update_dependencies","targetTaskId":"existing-task-id","blocks":["task-id"],"blockedBy":["task-id"]},
   {"action":"save_memory","content":"observation or rule to remember","type":"observation|rule"}
@@ -72,10 +76,12 @@ Only save genuinely useful, long-term patterns — not transient information.
 If the conversation leads you to believe the user's task priorities, focus, or organization should change (e.g. they want to reprioritize, shift focus, reorganize their day, or mention something that affects task urgency), append the following marker at the very end of your response (after any [ACTIONS] block if present) on its own line:
 [RECOMPUTE: brief summary of what changed]
 
+For simple focus changes (add/remove specific tasks), use set_focus/remove_focus actions instead — they're instant and deterministic. Only use [RECOMPUTE] when the user wants broader reprioritization.
+
 Examples of when to use this:
-- "i want to focus on design stuff today" → [RECOMPUTE: user wants to focus on design-related tasks today]
 - "actually X is way more urgent than Y" → [RECOMPUTE: user indicated X is more urgent than Y]
 - "can you reorganize my day?" → [RECOMPUTE: user requested day reorganization]
+- "everything changed, i need to reprioritize" → [RECOMPUTE: user wants full reprioritization]
 
 Do NOT use this marker for general questions, motivation, or task breakdowns that don't change priorities.`;
 }

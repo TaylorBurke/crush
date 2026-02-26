@@ -122,6 +122,8 @@ export type ChatAction =
   | { action: 'create'; title: string; deadline?: string | null; importance: Importance; tags?: string[]; estimatedEffort?: EffortLevel | null; emotionalContext?: EmotionalContext | null; clusterId?: string | null }
   | { action: 'complete'; targetTaskId: string }
   | { action: 'defer'; targetTaskId: string }
+  | { action: 'set_focus'; targetTaskId: string }
+  | { action: 'remove_focus'; targetTaskId: string }
   | { action: 'update_importance'; targetTaskId: string; importance: Importance }
   | { action: 'update_dependencies'; targetTaskId: string; blocks: string[]; blockedBy: string[] }
   | { action: 'save_memory'; content: string; type: 'observation' | 'rule' };

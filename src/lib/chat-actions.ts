@@ -1,7 +1,7 @@
 import type { ChatAction, Importance, EffortLevel, EmotionalContext } from '../types';
 
 const ACTIONS_REGEX = /\[ACTIONS\]\s*([\s\S]*?)\s*\[\/ACTIONS\]/;
-const VALID_ACTIONS = ['create', 'complete', 'defer', 'update_importance', 'update_dependencies', 'save_memory'] as const;
+const VALID_ACTIONS = ['create', 'complete', 'defer', 'set_focus', 'remove_focus', 'update_importance', 'update_dependencies', 'save_memory'] as const;
 const VALID_IMPORTANCE = ['high', 'medium', 'low'] as const;
 const VALID_EFFORT: EffortLevel[] = ['quick', 'deep', 'draining'];
 const VALID_EMOTION: EmotionalContext[] = ['excited', 'dreading', 'neutral'];
@@ -40,7 +40,7 @@ export function parseActionsBlock(rawResponse: string): { cleaned: string; actio
           return { action, title, deadline, importance, tags, estimatedEffort, emotionalContext, clusterId } as ChatAction;
         }
 
-        if (action === 'complete' || action === 'defer') {
+        if (action === 'complete' || action === 'defer' || action === 'set_focus' || action === 'remove_focus') {
           const targetTaskId = typeof item.targetTaskId === 'string' ? item.targetTaskId : '';
           if (!targetTaskId) return null;
           return { action, targetTaskId } as ChatAction;

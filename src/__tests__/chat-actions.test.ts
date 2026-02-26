@@ -155,5 +155,36 @@ describe('chat-actions', () => {
         expect(actions[0].blockedBy).toEqual(['task-3']);
       }
     });
+
+    it('extracts set_focus action', () => {
+      const raw = `added to your focus!\n\n[ACTIONS]\n[{"action":"set_focus","targetTaskId":"task-42"}]\n[/ACTIONS]`;
+      const { cleaned, actions } = parseActionsBlock(raw);
+      expect(cleaned).toBe('added to your focus!');
+      expect(actions).toEqual([{ action: 'set_focus', targetTaskId: 'task-42' }]);
+    });
+
+    it('extracts remove_focus action', () => {
+      const raw = `removed from focus.\n\n[ACTIONS]\n[{"action":"remove_focus","targetTaskId":"task-42"}]\n[/ACTIONS]`;
+      const { cleaned, actions } = parseActionsBlock(raw);
+      expect(cleaned).toBe('removed from focus.');
+      expect(actions).toEqual([{ action: 'remove_focus', targetTaskId: 'task-42' }]);
+    });
+
+    it('filters out set_focus/remove_focus with missing targetTaskId', () => {
+      const raw = `ok!\n\n[ACTIONS]\n[{"action":"set_focus"},{"action":"remove_focus"}]\n[/ACTIONS]`;
+      const { cleaned, actions } = parseActionsBlock(raw);
+      expect(cleaned).toBe('ok!');
+      expect(actions).toEqual([]);
+    });
+
+    it('handles focus actions mixed with other actions', () => {
+      const raw = `done!\n\n[ACTIONS]\n[\n  {"action":"create","title":"New task","importance":"high"},\n  {"action":"set_focus","targetTaskId":"task-1"},\n  {"action":"remove_focus","targetTaskId":"task-2"},\n  {"action":"complete","targetTaskId":"task-3"}\n]\n[/ACTIONS]`;
+      const { actions } = parseActionsBlock(raw);
+      expect(actions).toHaveLength(4);
+      expect(actions[0].action).toBe('create');
+      expect(actions[1]).toEqual({ action: 'set_focus', targetTaskId: 'task-1' });
+      expect(actions[2]).toEqual({ action: 'remove_focus', targetTaskId: 'task-2' });
+      expect(actions[3].action).toBe('complete');
+    });
   });
 });
