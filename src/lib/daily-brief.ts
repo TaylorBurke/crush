@@ -38,8 +38,10 @@ Respond with JSON only:
   "clusters": [{"id": "cluster-id", "name": "cluster name", "taskIds": ["id"], "progress": 0.0-1.0}]
 }
 
-Rules for focusToday (pick 2-4 tasks):
+Rules for focusToday (pick 2-6 tasks, preferring 2-4):
+- Pick 2-4 tasks normally. Expand to 5-6 ONLY when additional tasks have high urgency (tight deadlines, high importance, or user-indicated urgency language like "urgent", "critical", "ASAP", "extremely important", "right now")
 - Prioritize by: deadline proximity, importance, blocking impact
+- Treat strong urgency language in task titles/text as a direct signal — if the user says something is critical or urgent, it should almost certainly be in focus
 - Mix in one quick win if available
 - Only pick from active or deferred tasks
 
