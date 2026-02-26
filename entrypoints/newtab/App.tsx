@@ -208,7 +208,8 @@ export default function App() {
 
     // Execute actions
     let currentTasks = tasks;
-    const counts = { created: 0, completed: 0, deferred: 0, focused: 0, unfocused: 0, updated: 0, memoriesSaved: memories.length };
+    const counts = { created: 0, completed: 0, deferred: 0, focused: 0, unfocused: 0, updated: 0, memoriesSaved: 0 };
+    counts.memoriesSaved += memories.length;
     const createdTasks: Array<{ title: string; deadline: string | null; effort: EffortLevel | null }> = [];
     const createdIds: string[] = [];
     const focusAdds: string[] = [];
@@ -245,7 +246,7 @@ export default function App() {
         counts.memoriesSaved++;
       } else if (action.action === 'complete') {
         const target = currentTasks.find((t) => t.id === action.targetTaskId);
-        if (target) {
+        if (target && (target.status === 'active' || target.status === 'deferred')) {
           completeTask(target.id);
           currentTasks = currentTasks.map((t) => t.id === target.id ? { ...t, status: 'completed' as const, completedAt: new Date().toISOString() } : t);
           counts.completed++;
@@ -259,7 +260,7 @@ export default function App() {
         }
       } else if (action.action === 'defer') {
         const target = currentTasks.find((t) => t.id === action.targetTaskId);
-        if (target) {
+        if (target && target.status === 'active') {
           deferTask(target.id);
           currentTasks = currentTasks.map((t) => t.id === target.id ? { ...t, status: 'deferred' as const, deferrals: t.deferrals + 1 } : t);
           counts.deferred++;
@@ -274,14 +275,14 @@ export default function App() {
         focusRemoves.push(action.targetTaskId);
         counts.unfocused++;
       } else if (action.action === 'update_importance') {
-        const target = currentTasks.find((t) => t.id === action.targetTaskId);
+        const target = currentTasks.find((t) => t.id === action.targetTaskId && t.status !== 'completed');
         if (target) {
           updateTask(target.id, { importance: action.importance });
           currentTasks = currentTasks.map((t) => t.id === target.id ? { ...t, importance: action.importance } : t);
           counts.updated++;
         }
       } else if (action.action === 'update_dependencies') {
-        const target = currentTasks.find((t) => t.id === action.targetTaskId);
+        const target = currentTasks.find((t) => t.id === action.targetTaskId && t.status !== 'completed');
         if (target) {
           const newBlocks = [...new Set([...target.relationships.blocks, ...action.blocks])];
           const newBlockedBy = [...new Set([...target.relationships.blockedBy, ...action.blockedBy])];
@@ -305,7 +306,7 @@ export default function App() {
     if (counts.focused) summaryParts.push(`${counts.focused} focused`);
     if (counts.unfocused) summaryParts.push(`${counts.unfocused} unfocused`);
     if (counts.updated) summaryParts.push(`${counts.updated} updated`);
-    if (counts.memoriesSaved) summaryParts.push(`${counts.memoriesSaved} memory saved`);
+    if (counts.memoriesSaved) summaryParts.push(`${counts.memoriesSaved} ${counts.memoriesSaved > 1 ? 'memories' : 'memory'} saved`);
     if (summaryParts.length > 0) actionSummary = summaryParts.join(', ');
 
     // Apply focus deltas
