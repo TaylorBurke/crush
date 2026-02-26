@@ -1,13 +1,12 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { getGreeting } from '../../../src/lib/date';
 import { ChatActionCards } from './ChatActionCards';
-import type { CreatedTaskInfo } from './ChatActionCards';
 import type { ChatMessage } from '../../../src/types';
 
 interface AIChatPanelProps {
   open: boolean;
   onClose: () => void;
-  onSend: (message: string) => Promise<{ response: string; actionSummary: string | null; createdTasks: CreatedTaskInfo[] }>;
+  onSend: (message: string) => Promise<void>;
   messages: ChatMessage[];
   isLoading: boolean;
 }
@@ -19,10 +18,6 @@ export function AIChatPanel({ open, onClose, onSend, messages, isLoading }: AICh
     return 'crush';
   }, [isLoading, messages.length]);
   const [input, setInput] = useState('');
-  const [actionSummaries, setActionSummaries] = useState<Record<string, string>>({});
-  const [createdTasksMap, setCreatedTasksMap] = useState<Record<string, CreatedTaskInfo[]>>({});
-  const messagesRef = useRef(messages);
-  messagesRef.current = messages;
   const bottomRef = useRef<HTMLDivElement>(null);
   const initialScrollRef = useRef(true);
 
@@ -35,19 +30,7 @@ export function AIChatPanel({ open, onClose, onSend, messages, isLoading }: AICh
     if (!input.trim() || isLoading) return;
     const text = input.trim();
     setInput('');
-    const { actionSummary, createdTasks } = await onSend(text);
-    // Use ref to get the latest messages after onSend resolves
-    const latest = messagesRef.current;
-    const assistantMsg = latest[latest.length - 1];
-    if (assistantMsg?.role === 'assistant') {
-      const key = assistantMsg.timestamp;
-      if (actionSummary) {
-        setActionSummaries((prev) => ({ ...prev, [key]: actionSummary }));
-      }
-      if (createdTasks.length > 0) {
-        setCreatedTasksMap((prev) => ({ ...prev, [key]: createdTasks }));
-      }
-    }
+    await onSend(text);
   };
 
   return (
@@ -72,11 +55,11 @@ export function AIChatPanel({ open, onClose, onSend, messages, isLoading }: AICh
                   <div className="rounded-xl bg-surface px-4 py-2.5 text-text-primary">
                     {msg.content}
                   </div>
-                  {(msg.actionSummary || actionSummaries[msg.timestamp]) && (
-                    <p className="mt-1 text-xs text-accent">{msg.actionSummary || actionSummaries[msg.timestamp]}</p>
+                  {msg.actionSummary && (
+                    <p className="mt-1 text-xs text-accent">{msg.actionSummary}</p>
                   )}
-                  {createdTasksMap[msg.timestamp]?.length > 0 && (
-                    <ChatActionCards tasks={createdTasksMap[msg.timestamp]} />
+                  {msg.createdTasks && msg.createdTasks.length > 0 && (
+                    <ChatActionCards tasks={msg.createdTasks} />
                   )}
                 </div>
               )}

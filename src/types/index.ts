@@ -115,6 +115,7 @@ export interface ChatMessage {
   content: string;
   timestamp: string;
   actionSummary?: string;
+  createdTasks?: Array<{ title: string; deadline: string | null; effort: EffortLevel | null }>;
 }
 
 export type ChatAction =

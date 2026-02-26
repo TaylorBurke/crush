@@ -128,6 +128,14 @@ export const ChatStorage = {
     localStorage.setItem(key, JSON.stringify(existing));
   },
 
+  updateLastMessage(patch: Partial<ChatMessage>): void {
+    const key = CHAT_KEY_PREFIX + today();
+    const existing = this.getToday();
+    if (existing.length === 0) return;
+    existing[existing.length - 1] = { ...existing[existing.length - 1], ...patch };
+    localStorage.setItem(key, JSON.stringify(existing));
+  },
+
   clearToday(): void {
     localStorage.removeItem(CHAT_KEY_PREFIX + today());
   },

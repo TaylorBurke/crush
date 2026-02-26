@@ -122,6 +122,20 @@ export function useAI(apiKey: string, provider: Provider, model: string) {
     }
   }, [apiKey, provider, model]);
 
+  const updateLastAssistantMessage = useCallback((patch: { actionSummary?: string; createdTasks?: ChatMessage['createdTasks'] }) => {
+    setChatHistory((prev) => {
+      for (let i = prev.length - 1; i >= 0; i--) {
+        if (prev[i].role === 'assistant') {
+          const updated = [...prev];
+          updated[i] = { ...updated[i], ...patch };
+          return updated;
+        }
+      }
+      return prev;
+    });
+    ChatStorage.updateLastMessage(patch);
+  }, []);
+
   const clearChat = useCallback(() => { setChatHistory([]); }, []);
 
   const addSystemMessage = useCallback((content: string) => {
@@ -130,5 +144,5 @@ export function useAI(apiKey: string, provider: Provider, model: string) {
     ChatStorage.saveMessage(msg);
   }, []);
 
-  return { parseTask, generateBrief, generateGreeting, chat, clearChat, addSystemMessage, chatHistory, isParsing: parsing, isBriefing: briefing, isChatting: chatting };
+  return { parseTask, generateBrief, generateGreeting, chat, clearChat, addSystemMessage, updateLastAssistantMessage, chatHistory, isParsing: parsing, isBriefing: briefing, isChatting: chatting };
 }

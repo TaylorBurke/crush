@@ -196,7 +196,7 @@ export default function App() {
     }
   };
 
-  const handleChat = async (message: string): Promise<{ response: string; actionSummary: string | null; createdTasks: Array<{ title: string; deadline: string | null; effort: EffortLevel | null }> }> => {
+  const handleChat = async (message: string): Promise<void> => {
     const snapshot = buildContextSnapshot(tasks, computedView, ChatStorage.getRecent(2), settings.userName);
     const { response, recomputeContext, actions } = await ai.chat(message, snapshot);
 
@@ -303,7 +303,12 @@ export default function App() {
       ai.generateBrief(updatedSnapshot, true, briefContext).then((view) => { if (view) setComputedView(view); });
     }
 
-    return { response, actionSummary, createdTasks };
+    if (actionSummary || createdTasks.length > 0) {
+      ai.updateLastAssistantMessage({
+        actionSummary: actionSummary ?? undefined,
+        createdTasks: createdTasks.length > 0 ? createdTasks : undefined,
+      });
+    }
   };
 
   return (
