@@ -9,7 +9,8 @@ export default defineConfig({
   manifest: {
     name: 'Crush',
     description: 'AI-powered task intelligence for your new tab -- crush the day.',
-    version: '0.1.0',
+    version: '1.0.0',
     permissions: ['storage'],
+    homepage_url: 'https://github.com/TaylorBurke/crush',
   },
 });

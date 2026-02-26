@@ -245,7 +245,7 @@ As a Manifest V3 extension, Crush runs under Chrome's strict CSP which prevents 
 
 ## Project status
 
-Crush is in early development (v0.1.0). Current functionality is complete and working:
+Crush is at v1.0.0. Current functionality is complete and working:
 
 - Natural language task capture with AI parsing
 - AI-generated daily briefs with focus tasks, nudges, and clusters
@@ -265,6 +265,10 @@ Crush is in early development (v0.1.0). Current functionality is complete and wo
 - **Keyboard shortcuts** for power users
 - **Onboarding flow** for first-time setup
 
+## Privacy
+
+See [PRIVACY.md](PRIVACY.md) for the full privacy policy.
+
 ## License
 
-This project is private and not currently licensed for distribution.
+MIT
