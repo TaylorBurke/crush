@@ -11,6 +11,7 @@ interface SettingsPanelProps {
 
 export function SettingsPanel({ settings, updateSettings, hasApiKey }: SettingsPanelProps) {
   const [open, setOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   const [keyInput, setKeyInput] = useState('');
   const [modelInput, setModelInput] = useState('');
   const [availableModels, setAvailableModels] = useState<string[] | null>(null);
@@ -242,8 +243,43 @@ export function SettingsPanel({ settings, updateSettings, hasApiKey }: SettingsP
           )}
         </div>
 
+        <p className="mb-4 text-center text-xs text-text-muted">
+          by using crush you agree to the{' '}
+          <button onClick={() => setPrivacyOpen(true)} className="underline hover:text-text-secondary">privacy policy</button>
+        </p>
+
         <button onClick={() => setOpen(false)} className="w-full rounded-lg bg-surface-hover py-2 text-sm text-text-secondary hover:bg-surface">close</button>
       </div>
+
+      {privacyOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-overlay" onClick={() => setPrivacyOpen(false)}>
+          <div className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border bg-[var(--color-bg-gradient-from)] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h2 className="mb-4 text-lg font-medium text-text-primary">privacy policy</h2>
+            <div className="space-y-3 text-sm text-text-secondary">
+              <p><strong className="text-text-primary">data stored locally</strong></p>
+              <p>all task data, settings, and chat history are stored in your browser using localStorage and chrome.storage.local. this data never leaves your device except as described below.</p>
+
+              <p><strong className="text-text-primary">data sent to AI providers</strong></p>
+              <p>when AI features are used, crush sends task data (titles, statuses, deadlines, relationships) and your chat messages to the AI provider you configure (OpenAI or OpenRouter) via their APIs over HTTPS. there is no intermediary server.</p>
+
+              <p><strong className="text-text-primary">data not collected</strong></p>
+              <p>crush does not collect browsing history, page content, analytics, telemetry, cookies, or tracking identifiers. there is no backend server.</p>
+
+              <p><strong className="text-text-primary">permissions</strong></p>
+              <p>crush only requests the <code className="rounded bg-surface px-1">storage</code> permission to store your API key and settings securely.</p>
+
+              <p><strong className="text-text-primary">your control</strong></p>
+              <p>you can delete all stored data by removing the extension. you can change or remove your API key at any time. AI features are entirely optional.</p>
+
+              <p className="text-xs text-text-muted">
+                full policy:{' '}
+                <a href="https://github.com/TaylorBurke/crush/blob/main/PRIVACY.md" target="_blank" rel="noopener noreferrer" className="underline hover:text-text-secondary">github.com/TaylorBurke/crush</a>
+              </p>
+            </div>
+            <button onClick={() => setPrivacyOpen(false)} className="mt-4 w-full rounded-lg bg-surface-hover py-2 text-sm text-text-secondary hover:bg-surface">close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
