@@ -63,7 +63,9 @@ Rules for clusters:
 
 export function parseBriefResponse(responseText: string): ComputedView {
   try {
-    const data = JSON.parse(responseText);
+    // Strip markdown code block wrapper if present (some models ignore response_format)
+    const cleaned = responseText.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+    const data = JSON.parse(cleaned);
     return {
       generatedAt: new Date().toISOString(),
       focusToday: Array.isArray(data.focusToday) ? data.focusToday : [],

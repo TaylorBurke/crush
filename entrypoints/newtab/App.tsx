@@ -102,7 +102,11 @@ export default function App() {
 
       const snapshot = buildContextSnapshot(tasks, computedView, ChatStorage.getRecent(2), settings.userName);
       ai.generateBrief(snapshot, false).then(async (view) => {
-        if (!view) return;
+        if (!view) {
+          // Brief returned null — still open chat so user can interact
+          setChatOpen(true);
+          return;
+        }
         setComputedView(view);
         setChatOpen(true);
         // Generate daily greeting on first fresh brief of the day
@@ -111,6 +115,9 @@ export default function App() {
           const greetingSnapshot = buildContextSnapshot(tasks, view, ChatStorage.getRecent(2), settings.userName);
           await ai.generateGreeting(greetingSnapshot);
         }
+      }).catch((error) => {
+        console.error('Brief generation failed:', error);
+        setChatOpen(true);
       });
     }
   }, [hasApiKey]);

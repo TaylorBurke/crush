@@ -31,7 +31,7 @@ export function useAI(apiKey: string, provider: Provider, model: string) {
     } finally {
       setParsing(false);
     }
-  }, [apiKey]);
+  }, [apiKey, provider, model]);
 
   const generateBrief = useCallback(async (snapshot: ContextSnapshot, force = false, chatContext?: string): Promise<ComputedView | null> => {
     if (!apiKey) return null;
@@ -56,7 +56,7 @@ export function useAI(apiKey: string, provider: Provider, model: string) {
     } finally {
       setBriefing(false);
     }
-  }, [apiKey]);
+  }, [apiKey, provider, model]);
 
   const chat = useCallback(async (userMessage: string, snapshot: ContextSnapshot): Promise<ChatResult> => {
     setChatting(true);
@@ -102,7 +102,7 @@ export function useAI(apiKey: string, provider: Provider, model: string) {
     } finally {
       setChatting(false);
     }
-  }, [apiKey, chatHistory]);
+  }, [apiKey, provider, model, chatHistory]);
 
   const generateGreeting = useCallback(async (snapshot: ContextSnapshot): Promise<string | null> => {
     if (!apiKey) return null;
@@ -120,7 +120,7 @@ export function useAI(apiKey: string, provider: Provider, model: string) {
       console.error('Greeting generation failed:', error);
       return null;
     }
-  }, [apiKey]);
+  }, [apiKey, provider, model]);
 
   const clearChat = useCallback(() => { setChatHistory([]); }, []);
 

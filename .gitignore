@@ -24,3 +24,8 @@ web-ext.config.ts
 *.njsproj
 *.sln
 *.sw?
+
+# Claude Code
+.claude/
+CLAUDE.md
+docs/plans/

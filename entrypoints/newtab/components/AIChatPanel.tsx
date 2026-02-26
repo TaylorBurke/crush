@@ -24,9 +24,11 @@ export function AIChatPanel({ open, onClose, onSend, messages, isLoading }: AICh
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
   const bottomRef = useRef<HTMLDivElement>(null);
+  const initialScrollRef = useRef(true);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    bottomRef.current?.scrollIntoView({ behavior: initialScrollRef.current ? 'instant' : 'smooth' });
+    initialScrollRef.current = false;
   }, [messages]);
 
   const handleSend = async () => {

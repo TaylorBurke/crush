@@ -69,7 +69,8 @@ export const ViewStorage = {
   get(): ComputedView | null {
     const raw = localStorage.getItem(VIEW_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as ComputedView;
+    try { return JSON.parse(raw) as ComputedView; }
+    catch { return null; }
   },
 
   save(view: ComputedView): void {
